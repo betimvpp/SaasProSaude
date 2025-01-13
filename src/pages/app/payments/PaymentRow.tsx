@@ -8,6 +8,7 @@ import { useState } from 'react';
 
 export const PaymentRow = ({ payment, isAdmin, loading }: { payment: PaymentInfo; isAdmin: string; loading: boolean; }) => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+    
     return (
         <TableRow key={payment.funcionario_id}>
             <TableCell>

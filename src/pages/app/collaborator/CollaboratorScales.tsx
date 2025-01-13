@@ -31,7 +31,9 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
     const [editedValues, setEditedValues] = useState<{
         valor_pago: string;
         pagamentoAR_AV: string;
-    }>({ valor_pago: "", pagamentoAR_AV: "" });
+        valor_recebido: string;
+        tipo_servico: string;
+    }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
 
     const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0) => {
         try {
@@ -113,6 +115,8 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
         setEditedValues({
             valor_pago: scale.valor_pago.toString(),
             pagamentoAR_AV: scale.pagamentoAR_AV || "",
+            valor_recebido: scale.valor_recebido.toString(),
+            tipo_servico: scale.tipo_servico || "",
         });
     };
 
@@ -123,6 +127,8 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                 .update({
                     valor_pago: parseFloat(editedValues.valor_pago),
                     pagamentoAR_AV: editedValues.pagamentoAR_AV,
+                    valor_recebido: parseFloat(editedValues.valor_recebido),
+                    tipo_servico: editedValues.tipo_servico,
                 })
                 .eq("escala_id", escala_id);
 
@@ -195,7 +201,27 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                                 <TableRow key={scale.escala_id}>
                                     <TableCell>{scale.nomePaciente}</TableCell>
                                     <TableCell>{scale.data}</TableCell>
-                                    {!isLoading && isAdmin === "admin" && <TableCell>{scale.valor_recebido}</TableCell>}
+
+                                    {!isLoading && isAdmin === "admin" && (
+                                        <TableCell className="text-center">
+                                            {editingRow === scale.escala_id ? (
+                                                <Input
+                                                    className="w-16 h-3 m-auto"
+                                                    type="number"
+                                                    value={editedValues.valor_recebido}
+                                                    onChange={(e) =>
+                                                        setEditedValues((prev) => ({
+                                                            ...prev,
+                                                            valor_recebido: e.target.value,
+                                                        }))
+                                                    }
+                                                />
+                                            ) : (
+                                                scale.valor_recebido
+                                            )}
+                                        </TableCell>
+                                    )}
+
                                     {editingRow === scale.escala_id ? (
                                         <TableCell className="text-center">
                                             <Input
@@ -213,6 +239,7 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                                     ) : (
                                         <TableCell>{scale.valor_pago}</TableCell>
                                     )}
+
                                     {editingRow === scale.escala_id ? (
                                         <TableCell className="text-center ">
                                             <Input
@@ -230,7 +257,25 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                                     ) : (
                                         <TableCell>{scale.pagamentoAR_AV || "N/A"}</TableCell>
                                     )}
-                                    <TableCell>{scale.tipo_servico}</TableCell>
+
+                                    <TableCell className="text-center">
+                                        {editingRow === scale.escala_id ? (
+                                            <Input
+                                                className="w-16 h-3 m-auto"
+                                                type="text"
+                                                value={editedValues.tipo_servico}
+                                                onChange={(e) =>
+                                                    setEditedValues((prev) => ({
+                                                        ...prev,
+                                                        tipo_servico: e.target.value,
+                                                    }))
+                                                }
+                                            />
+                                        ) : (
+                                            scale.tipo_servico
+                                        )}
+                                    </TableCell>
+
                                     <TableCell>
                                         {getServiceTime(scale?.tipo_servico, scale?.horario_gerenciamento!)}
                                     </TableCell>

@@ -15,7 +15,7 @@ import { eachDayOfInterval, format } from 'date-fns'
 import { toast } from 'sonner'
 import supabase from '@/lib/supabase'
 
-export const CreateMultiScheduleTable = () => {
+export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const { patients, fetchPatients } = usePatients();
     const { collaborators, fetchCollaborator } = useCollaborator();
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([]);
@@ -42,21 +42,6 @@ export const CreateMultiScheduleTable = () => {
             collaboratorName: '',
         },
     });
-
-    // const handlePatientSelection = (patientId: string) => {
-    //     const selectedPatientData = patients.find(patient => patient.paciente_id === patientId);
-    //     setValue('paciente_id', patientId);
-
-    //     if (selectedPatientData) {
-    //         setValue('valor_recebido', selectedPatientData.pagamento_dia!);
-    //         setValue('valor_pago', selectedPatientData.pagamento_a_profissional!);
-
-    //         const filteredCollaborators = collaborators.filter(
-    //             collaborator => collaborator.cidade === selectedPatientData.cidade
-    //         );
-    //         setFilteredCollaborators(filteredCollaborators);
-    //     }
-    // };
 
     const handlePatientSelection = async (patientId: string) => {
         try {
@@ -314,12 +299,16 @@ export const CreateMultiScheduleTable = () => {
                     </TableRow>
 
                     {/* Pagamento Total */}
-                    <TableRow>
-                        <TableCell className="font-semibold">Pagamento Total:</TableCell>
-                        <TableCell className="flex justify-start -mt-2">
-                            <Input type='number' {...register('valor_recebido')} id='valor_recebido' />
-                        </TableCell>
-                    </TableRow>
+                    {isAdmin === 'admin' ?
+                        <TableRow>
+                            <TableCell className="font-semibold">Pagamento Total:</TableCell>
+                            <TableCell className="flex justify-start -mt-2">
+                                <Input type='number' {...register('valor_recebido')} id='valor_recebido' />
+                            </TableCell>
+                        </TableRow>
+                        :
+                        <></>
+                    }
 
                     {/* Pagamento AR/AV */}
                     <TableRow>

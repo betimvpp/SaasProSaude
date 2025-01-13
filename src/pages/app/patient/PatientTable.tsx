@@ -28,7 +28,7 @@ export const PatientTable = () => {
                 <TableRow className="text-center">
                     <TableHead className="w-4"></TableHead>
                     <TableHead className="text-center">Nome Completo</TableHead>
-                    <TableHead className="text-center">CPF</TableHead>
+                    <TableHead className="text-center">Nível</TableHead>
                     <TableHead className="text-center">Telefone</TableHead>
                     <TableHead className="text-center">Contratante</TableHead>
                     {!isLoading && collaboratorData?.role === 'admin' ? <TableHead className="text-center">Pagamento/Dia</TableHead> : <></>}

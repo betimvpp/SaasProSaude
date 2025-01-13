@@ -31,7 +31,12 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         )
       },
-      { path: '/escala', element: <Scale /> },
+      {
+        path: '/escala', element:
+          <ProtectedRoute allowedRoles={['admin', 'rh']}>
+            <Scale />
+          </ProtectedRoute>
+      },
       {
         path: '/escala/permutas', element:
           <ProtectedRoute allowedRoles={['admin', 'rh']}>
@@ -51,7 +56,7 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
       },
       {
-        path: '/recursoshumanos', element:
+        path: '/gestores', element:
           <ProtectedRoute allowedRoles={['admin', 'rh']}>
             <HumanResources />
           </ProtectedRoute>

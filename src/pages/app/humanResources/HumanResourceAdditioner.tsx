@@ -40,7 +40,7 @@ export const HumanResourceAdditioner = () => {
     return (
         <DialogContent className="min-w-[1000px]">
             <DialogHeader>
-                <DialogTitle>Adicionar RH:</DialogTitle>
+                <DialogTitle>Adicionar Gestor:</DialogTitle>
             </DialogHeader>
             <form className="space-y-6" onSubmit={handleSubmit(handleAdd)}>
                 <Table >

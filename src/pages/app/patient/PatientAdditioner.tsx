@@ -66,7 +66,7 @@ export const PatientAdditioner = () => {
             await addPatient(patientData);
             reset();
         } catch (error) {
-            console.error("Erro ao adicionar paciente:", error);
+            console.error("Erro ao adicionar paciente:", error!);
         }
         ;
     };
@@ -88,6 +88,7 @@ export const PatientAdditioner = () => {
         }
         fetchCities();
     }, [user, getCollaboratorById]);
+
     return (
         <DialogContent className="min-w-[90vw]">
             <DialogHeader>
@@ -145,6 +146,12 @@ export const PatientAdditioner = () => {
                                     </SelectContent>
                                 </Select>
                                 {errors.cidade && <p className="text-red-500 text-sm mt-1">Cidade é obrigatória.</p>}
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell className="font-semibold">Bairro:</TableCell>
+                            <TableCell className="flex justify-start -mt-2">
+                                <Input id="bairro" type="text" placeholder="Ex: Brotas" {...register("bairro")} />
                             </TableCell>
                         </TableRow>
                         <TableRow>

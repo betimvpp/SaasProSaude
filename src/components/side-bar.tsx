@@ -46,9 +46,9 @@ export function SideBar() {
                     Pacientes
                 </NavLink>
 
-                <NavLink to="/recursoshumanos" disabled={isRestricted}>
+                <NavLink to="/gestores" disabled={isRestricted}>
                     <Speech className='min-h-6 min-w-6' />
-                    Recursos Humanos
+                    Gestores
                 </NavLink>
 
                 <NavLink to="/colaboradores" disabled={isRestricted}>

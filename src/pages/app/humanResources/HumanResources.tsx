@@ -25,8 +25,8 @@ export const HumanResources = () => {
 
   return (
     <div className="flex flex-col w-full gap-2">
-      <Helmet title="RH" />
-      <h1 className="text-4xl font-bold textslate mb-2">Painel de RH</h1>
+      <Helmet title="Gestores" />
+      <h1 className="text-4xl font-bold textslate mb-2">Painel de Gestores</h1>
       <HumanResourcesFilters />
       <div className="w-full h-full max-h-[700px] shadow-lg border rounded-md">
         <HumanResourcesTable />

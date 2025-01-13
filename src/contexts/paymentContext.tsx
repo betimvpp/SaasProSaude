@@ -114,7 +114,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
 
             const { data: allScales, error: scalesError } = await supabase
                 .from("escala")
-                .select("funcionario_id, valor_recebido, valor_pago, data")
+                .select("funcionario_id, valor_recebido, valor_pago, data, pagamentoAR_AV")
                 .gte("data", `${currentMonth}-01`)
                 .lte("data", `${currentMonth}-${lastDayOfMonth}`);
 
@@ -128,16 +128,16 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 const collaboratorScales = allScales.filter(
                     (scale) => scale.funcionario_id === collaborator.funcionario_id
                 );
-
+    
                 const valorRecebido = collaboratorScales.reduce(
-                    (acc, scale) => acc + (scale.valor_recebido || 0),
+                    (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_recebido || 0) : 0),
                     0
                 );
                 const valorPago = collaboratorScales.reduce(
-                    (acc, scale) => acc + (scale.valor_pago || 0),
+                    (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_pago || 0) : 0),
                     0
                 );
-
+    
                 return {
                     funcionario_id: collaborator.funcionario_id,
                     nome: collaborator.nome,

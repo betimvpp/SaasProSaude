@@ -13,6 +13,7 @@ export const patientSchema = z.object({
   email: z.string().optional(),
   rua: z.string().optional(),
   cidade: z.string().optional(),
+  bairro: z.string().optional(),
   status: z.string().optional(),
   pagamento_a_profissional: z.number().optional()
 });
@@ -122,6 +123,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       const parsedPatient = patientSchema.omit({ paciente_id: true }).safeParse(newPatient);
       if (!parsedPatient.success) {
+        toast.error("Dados inválidos! Verifique os campos preenchidos.");
         console.error('Erro na validação do paciente:', parsedPatient.error);
         setLoading(false);
         return;
@@ -133,6 +135,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select();
 
       if (error) {
+        toast.error("Erro ao salvar o paciente no banco de dados.");
         console.error('Erro ao adicionar paciente:', error);
         setLoading(false);
         return;
@@ -168,9 +171,9 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } catch (error) {
       console.error('Erro inesperado ao adicionar paciente:', error);
       toast.error("Falha inesperada ao adicionar paciente!");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
+
   }, []);
 
   const updatePatient = useCallback(async (updatedPatient: Partial<Patient>, pacienteId: string, especialidades?: number[]) => {

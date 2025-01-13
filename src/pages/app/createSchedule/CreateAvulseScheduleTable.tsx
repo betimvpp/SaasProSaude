@@ -15,17 +15,15 @@ import { format } from 'date-fns'
 import { toast } from 'sonner'
 import supabase from '@/lib/supabase'
 
-export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
+export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const { patients, fetchPatients } = usePatients();
     const { collaborators, fetchCollaborator } = useCollaborator();
     const [searchValue, setSearchValue] = useState('');
     const [collaboratorSearchValue, setCollaboratorSearchValue] = useState('');
     const [selectedServiceType, setSelectedServiceType] = useState<string>('');
     const [selectedData, setSelectedData] = useState<Date>();
-    const [filteredCollaborators, setFilteredCollaborators] = useState<any[]>([]);
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([])
-    const [applyNeighborhoodFilter, setApplyNeighborhoodFilter] = useState(false);
 
     const { register, setValue, watch, } = useForm<Scale>({});
 
@@ -43,153 +41,19 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         },
     });
 
-    // const handlePatientSelection = async (patientId: string) => {
-    //     try {
-    //         const selectedPatientData = patients.find(patient => patient.paciente_id === patientId);
-    //         setValue('paciente_id', patientId);
-
-    //         if (selectedPatientData) {
-    //             setValue('valor_recebido', selectedPatientData.pagamento_dia!);
-    //             setValue('valor_pago', selectedPatientData.pagamento_a_profissional!);
-
-    //             let filteredCollaborators = collaborators.filter(
-    //                 collaborator => collaborator.cidade === selectedPatientData.cidade
-    //             );
-
-    //             const { data: patientSpecialties, error: specialtiesError } = await supabase
-    //                 .from('paciente_especialidades')
-    //                 .select('especialidade_id')
-    //                 .eq('paciente_id', patientId);
-
-    //             if (specialtiesError) {
-    //                 console.error('Erro ao buscar especialidades do paciente:', specialtiesError);
-    //                 toast.error('Erro ao buscar especialidades do paciente.');
-    //                 setFilteredCollaborators(filteredCollaborators); // Continua apenas com o filtro por cidade
-    //                 return;
-    //             }
-
-    //             if (patientSpecialties && patientSpecialties.length > 0) {
-    //                 const specialtyIds = patientSpecialties.map(specialty => specialty.especialidade_id);
-
-    //                 const { data: matchingCollaborators, error: collaboratorsError } = await supabase
-    //                     .from('funcionario_especialidade')
-    //                     .select('funcionario_id')
-    //                     .in('especialidade_id', specialtyIds);
-
-    //                 if (collaboratorsError) {
-    //                     console.error('Erro ao buscar colaboradores:', collaboratorsError);
-    //                     toast.error('Erro ao buscar colaboradores.');
-    //                 } else if (matchingCollaborators && matchingCollaborators.length > 0) {
-    //                     const matchingCollaboratorIds = matchingCollaborators.map(c => c.funcionario_id);
-
-    //                     filteredCollaborators = filteredCollaborators.filter(collaborator =>
-    //                         matchingCollaboratorIds.includes(collaborator.funcionario_id)
-    //                     );
-    //                 } else {
-    //                     toast.error('Nenhum colaborador encontrado com as especialidades do paciente.');
-    //                     filteredCollaborators = [];
-    //                 }
-    //             }
-
-    //             setFilteredCollaborators(filteredCollaborators);
-    //         }
-    //     } catch (error) {
-    //         console.error('Erro ao processar seleção do paciente:', error);
-    //         toast.error('Erro inesperado ao processar seleção do paciente.');
-    //     }
-    // };
-
     const handlePatientSelection = async (patientId: string) => {
         try {
-            const selectedPatientData = patients.find((patient) => patient.paciente_id === patientId);
-            if (!selectedPatientData) return;
+            const selectedPatientData = patients.find(patient => patient.paciente_id === patientId);
+            setValue('paciente_id', patientId);
 
-            let filtered = collaborators.filter(
-                (collaborator) => collaborator.cidade === selectedPatientData.cidade
-            );
-
-            const { data: patientSpecialties, error: specialtiesError } = await supabase
-                .from("paciente_especialidades")
-                .select("especialidade_id")
-                .eq("paciente_id", patientId);
-
-            if (specialtiesError) {
-                console.error("Erro ao buscar especialidades do paciente:", specialtiesError);
-                toast.error("Erro ao buscar especialidades do paciente.");
-                setFilteredCollaborators(filtered);
-                return;
+            if (selectedPatientData) {
+                setValue('valor_recebido', selectedPatientData.pagamento_dia!);
+                setValue('valor_pago', selectedPatientData.pagamento_a_profissional!);
             }
 
-            if (patientSpecialties && patientSpecialties.length > 0) {
-                const specialtyIds = patientSpecialties.map((s) => s.especialidade_id);
-                const { data: matchingCollaborators, error: collaboratorsError } = await supabase
-                    .from("funcionario_especialidade")
-                    .select("funcionario_id")
-                    .in("especialidade_id", specialtyIds);
-
-                if (!collaboratorsError && matchingCollaborators) {
-                    const matchingIds = matchingCollaborators.map((c) => c.funcionario_id);
-                    filtered = filtered.filter((collaborator) => matchingIds.includes(collaborator.funcionario_id));
-                }
-            }
-
-            if (applyNeighborhoodFilter) {
-                const { data: collaboratorNeighborhoods, error: neighborhoodError } = await supabase
-                    .from("funcionario_bairro")
-                    .select("funcionario_id")
-                    .eq("bairro", selectedPatientData.bairro);
-
-                if (neighborhoodError) {
-                    console.error("Erro ao buscar bairros dos colaboradores:", neighborhoodError);
-                    toast.error("Erro ao aplicar filtro por bairro.");
-                } else if (collaboratorNeighborhoods && collaboratorNeighborhoods.length > 0) {
-                    const neighborhoodIds = collaboratorNeighborhoods.map((c) => c.funcionario_id);
-                    filtered = filtered.filter((collaborator) => neighborhoodIds.includes(collaborator.funcionario_id));
-                }
-            }
-
-            setFilteredCollaborators(filtered);
         } catch (error) {
-            console.error("Erro ao processar seleção do paciente:", error);
-            toast.error("Erro inesperado ao processar seleção do paciente.");
-        }
-    };
-
-    const fetchAvailableCollaborators = async (date: Date) => {
-        try {
-            if (!date) {
-                toast.error("Selecione uma data válida.");
-                return;
-            }
-
-            const formattedDate = format(date, 'yyyy-MM-dd');
-
-            const { data: availableCollaborators, error } = await supabase
-                .from('disponibilidade_funcionario')
-                .select('funcionario_id')
-                .eq('data', formattedDate);
-
-            if (error) {
-                console.error('Erro ao buscar colaboradores disponíveis:', error);
-                toast.error('Erro ao buscar colaboradores disponíveis.');
-                return [];
-            }
-
-            if (availableCollaborators && availableCollaborators.length > 0) {
-                const collaboratorIds = availableCollaborators.map(c => c.funcionario_id);
-
-                const filtered = collaborators.filter(collaborator =>
-                    collaboratorIds.includes(collaborator.funcionario_id)
-                );
-
-                setFilteredCollaborators(filtered);
-            } else {
-                toast.info('Nenhum colaborador disponível para a data selecionada.');
-                setFilteredCollaborators([]);
-            }
-        } catch (error) {
-            console.error('Erro ao buscar colaboradores disponíveis:', error);
-            toast.error('Erro inesperado ao buscar colaboradores disponíveis.');
+            console.error('Erro ao processar seleção do paciente:', error);
+            toast.error('Erro inesperado ao processar seleção do paciente.');
         }
     };
 
@@ -263,11 +127,6 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         return () => clearTimeout(timeoutId);
     }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaborator]);
 
-    useEffect(() => {
-        if (selectedData) {
-            fetchAvailableCollaborators(selectedData);
-        }
-    }, [selectedData]);
 
     return (
         <form className='h-full'>
@@ -294,7 +153,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     {/* Nome Do Paciente */}
                     <TableRow className='col-span-2'>
                         <TableCell className="font-semibold">Nome do Paciente:</TableCell>
-                        <TableCell className="flex justify-start -mt-2 flex-col gap-2">
+                        <TableCell className="flex justify-start -mt-2">
                             <Select
                                 {...register('paciente_id')}
                                 onValueChange={handlePatientSelection}
@@ -322,14 +181,6 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     ))}
                                 </SelectContent>
                             </Select>
-                            <span className='flex items-center space-x-1 pl-1'>
-                                <input type="checkbox"
-                                    checked={applyNeighborhoodFilter}
-                                    onChange={(e) => setApplyNeighborhoodFilter(e.target.checked)}
-                                    className='cursor-pointer'
-                                />
-                                <label htmlFor="">Filtrar por bairro</label>
-                            </span>
                         </TableCell>
                     </TableRow>
 
@@ -388,7 +239,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                             setCollaboratorValue("collaboratorName", value);
                                         }}
                                     />
-                                    {filteredCollaborators.map((collaborator) => (
+                                    {collaborators.map((collaborator) => (
                                         <SelectItem key={collaborator.funcionario_id} value={collaborator.funcionario_id}>
                                             {collaborator.nome}
                                         </SelectItem>

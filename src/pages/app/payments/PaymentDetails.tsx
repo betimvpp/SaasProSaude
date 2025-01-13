@@ -5,13 +5,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PaymentInfo } from '@/contexts/paymentContext';
 import { usePayment } from '@/contexts/paymentContext'; // Importe o contexto
 import { format } from 'date-fns';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable'; // Adicione se necessário para suportar tabelas
 import { useEffect, useRef, useState } from 'react';
 
+declare module 'jspdf' {
+    interface jsPDF {
+        autoTable: (options: any) => jsPDF;
+    }
+}
+
 export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: PaymentInfo; isAdmin: string; loading: boolean; open: boolean }) => {
-    const [pageIndex, setPageIndex] = useState(0)
-    const { fetchCollaboratorScales, totalScalesCount, collaboratorScalesData, loading: loadingScales } = usePayment(); // Use o contexto para acessar a função e os dados
+    const [pageIndex, setPageIndex] = useState(0);
+    const { fetchCollaboratorScales, totalScalesCount, collaboratorScalesData, loading: loadingScales } = usePayment();
     const isFirstRender = useRef(true);
-    
+
     const handlePageChange = (newPageIndex: number) => {
         setPageIndex(newPageIndex);
     };
@@ -44,11 +52,43 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         }
     };
 
+    const generatePDF = () => {
+        const doc = new jsPDF();
+        const header = `Colaborador: ${payment.nome}\nChave PIX: ${payment.chave_pix || 'Não informado'}\nTotal (AR): ${collaboratorScalesData
+                .filter(scale => scale.pagamentoAR_AV === 'AR')
+                .reduce((total, scale) => total + (scale.valor_pago || 0), 0)
+            }`;
+
+        // Cabeçalho
+        doc.setFontSize(12);
+        doc.text(header, 10, 10);
+
+        // Corpo da tabela
+        const tableData = collaboratorScalesData.map(scale => [
+            scale.paciente_nome,
+            scale.telefone || 'Telefone não definido',
+            scale.tipo_servico,
+            getServiceTime(scale.tipo_servico!, 'Horário não definido'),
+            scale?.data && !isNaN(new Date(scale.data).getTime()) ? format(new Date(scale.data), 'dd/MM/yyyy') : 'Data inválida',
+            scale.valor_pago,
+            scale.pagamentoAR_AV
+        ]);
+
+        doc.autoTable({
+            head: [['Paciente', 'Telefone', 'Serviço', 'Horário', 'Data', 'Valor Pago', 'Pagamento']],
+            body: tableData,
+            startY: 30,
+        });
+
+        // Salva o PDF
+        doc.save(`Escalas_${payment.nome}.pdf`);
+    };
+
     useEffect(() => {
         if (payment?.funcionario_id && payment?.mes && !isFirstRender.current) {
             fetchCollaboratorScales(payment.funcionario_id, payment.mes, pageIndex);
         } else {
-            isFirstRender.current = false; 
+            isFirstRender.current = false;
         }
     }, [payment, fetchCollaboratorScales, pageIndex]);
 
@@ -56,7 +96,15 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col'>
             <DialogHeader>
                 <DialogTitle>Escalas do Colaborador: {payment.nome}</DialogTitle>
-                <DialogDescription>Mês: {getMonthName(payment.mes!)}</DialogDescription>
+                <DialogDescription>
+                    Mês: {getMonthName(payment.mes!)}
+                    <button
+                        className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        onClick={generatePDF}
+                    >
+                        Gerar Fatura
+                    </button>
+                </DialogDescription>
             </DialogHeader>
             <div className='h-full w-full max-h-[700px] shadow-lg border rounded- overflow-hidden'>
                 <Table className='h-full w-full'>
@@ -76,10 +124,14 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                         {collaboratorScalesData.map((scale, index) => (
                             <TableRow className='text-center' key={index}>
                                 <TableCell>{scale.paciente_nome}</TableCell>
-                                <TableCell>{scale.telefone ? scale.telefone : "Telefone não definido"}</TableCell>
+                                <TableCell>{scale.telefone || "Telefone não definido"}</TableCell>
                                 <TableCell>{scale.tipo_servico}</TableCell>
                                 <TableCell>{getServiceTime(scale.tipo_servico!, "Horário não definido")}</TableCell>
-                                <TableCell>{scale?.data ? format(new Date(scale.data), 'dd/MM/yyyy') : 'Data inválida'}</TableCell>
+                                <TableCell>
+                                    {scale?.data && !isNaN(new Date(scale.data).getTime())
+                                        ? format(new Date(scale.data), 'dd/MM/yyyy')
+                                        : 'Data inválida'}
+                                </TableCell>
                                 {!loading && isAdmin === 'admin' ? <TableCell>{scale.valor_recebido}</TableCell> : <></>}
                                 <TableCell>{scale.valor_pago}</TableCell>
                                 <TableCell>{scale.pagamentoAR_AV}</TableCell>
@@ -88,7 +140,11 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                     </TableBody>
                     {loadingScales && <TableSkeleton />}
                 </Table>
-                {!loading && collaboratorScalesData.length <= 0 && <div className="w-full h-[90%] m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhum paciente encontrado!</div>}
+                {!loading && collaboratorScalesData.length <= 0 && (
+                    <div className="w-full h-[90%] m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">
+                        Nenhum paciente encontrado!
+                    </div>
+                )}
             </div>
             <Pagination
                 pageIndex={pageIndex}
@@ -97,5 +153,5 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                 onPageChange={handlePageChange}
             />
         </DialogContent>
-    )
-}
+    );
+};

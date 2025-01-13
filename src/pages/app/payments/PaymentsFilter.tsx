@@ -6,7 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '@/components/ui/select'
 import { PaymentFilters, paymentFiltersSchema, usePayment } from '@/contexts/paymentContext'
 
-export function PaymentFilter() {
+interface PaymentFilterProps {
+    setSelectedMonth: (month: string) => void;
+}
+export function PaymentFilter({ setSelectedMonth }: PaymentFilterProps) {
     const { fetchPayments } = usePayment();
 
     const { register, handleSubmit, control, reset } = useForm<PaymentFilters>({
@@ -20,6 +23,7 @@ export function PaymentFilter() {
 
     async function handleFilter(data: PaymentFilters) {
         await fetchPayments(data);
+        setSelectedMonth(data.month!);
     }
 
     function handleClearFilters() {
@@ -34,7 +38,7 @@ export function PaymentFilter() {
     }
     const currentMonth = new Date().toISOString().slice(0, 7);
     const currentYear = parseInt(currentMonth.split("-")[0], 10);
-    
+
     return (
         <div className='flex justify-between'>
             <form

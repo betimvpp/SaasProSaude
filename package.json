@@ -1,5 +1,5 @@
 {
-  "name": "coopervidasaas",
+  "name": "prosaudesaas",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -27,10 +27,13 @@
     "coopervidasaas": "file:",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "localforage": "^1.10.0",
     "lucide-react": "^0.446.0",
     "match-sorter": "^6.3.4",
     "moment": "^2.30.1",
+    "prosaudesaas": "file:",
     "react": "^18.3.1",
     "react-big-calendar": "^1.15.0",
     "react-day-picker": "^9.3.0",
@@ -49,6 +52,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/jspdf": "^1.3.3",
     "@types/node": "^22.9.3",
     "@types/react": "^18.3.3",
     "@types/react-big-calendar": "^1.15.0",

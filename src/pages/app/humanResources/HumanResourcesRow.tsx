@@ -16,7 +16,7 @@ export const HumanResourcesRow = ({ humanResource }: { humanResource: HumanResou
                     <DialogTrigger asChild>
                         <Button variant="outline" size="xs">
                             <Search className="h-3 w-3" />
-                            <span className="sr-only">Detalhes do RH</span>
+                            <span className="sr-only">Detalhes do Gestor</span>
                         </Button>
                     </DialogTrigger>
                     <HumanResourceDetails open={isDetailsOpen} humanResource={humanResource} />

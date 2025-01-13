@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 
 import { useHabilities } from "@/contexts/habilitiesContext";
 import { Patient, usePatients } from "@/contexts/patientContext";
+import supabase from "@/lib/supabase";
 import { useEffect, useState } from "react";
 
 import { useForm } from "react-hook-form";
@@ -19,6 +20,21 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
     });
     const { updatePatient } = usePatients()
     const [selectedHabilities, setSelectedHabilities] = useState<number[]>([]);
+    const [cities, setCities] = useState<string[]>([]);
+
+    const fetchCities = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("cidade_de_atuacao")
+                .select("cidade");
+
+            if (error) throw error;
+            setCities(data.map((city) => city.cidade)); // Atualize o estado com os nomes das cidades.
+        } catch (error) {
+            console.error("Erro ao buscar cidades:", error);
+            toast.error("Não foi possível carregar as cidades.");
+        }
+    };
 
 
     const handleUpdate = async (dataResp: Patient) => {
@@ -60,6 +76,7 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
 
             loadPatientHabilities();
         }
+        fetchCities();
     }, [patient.paciente_id, fetchPatientHabilities]);
 
 
@@ -105,7 +122,27 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
                         <TableRow>
                             <TableCell className="font-semibold">Cidade:</TableCell>
                             <TableCell className="flex justify-start -mt-2">
-                                <Input id="cidade" type="text" {...register("cidade")} />
+                                <Select
+                                    onValueChange={(value) => setValue("cidade", value)}
+                                    defaultValue={patient.cidade}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Selecione uma cidade" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {cities.map((city) => (
+                                            <SelectItem key={city} value={city}>
+                                                {city}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </TableCell>
+                        </TableRow>
+                        <TableRow>
+                            <TableCell className="font-semibold">Bairro:</TableCell>
+                            <TableCell className="flex justify-start -mt-2">
+                                <Input id="bairro" type="text" {...register("bairro")} />
                             </TableCell>
                         </TableRow>
                         <TableRow>
