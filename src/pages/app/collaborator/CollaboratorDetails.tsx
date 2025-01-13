@@ -1,11 +1,14 @@
 import { Button } from "@/components/ui/button";
-import {  DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Collaborator, useCollaborator } from "@/contexts/collaboratorContext";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useHabilities } from "@/contexts/habilitiesContext";
+import supabase from "@/lib/supabase";
 
 export interface CollaboratorDetailsProps {
     collaborator: Collaborator;
@@ -13,13 +16,36 @@ export interface CollaboratorDetailsProps {
 }
 
 export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collaborator; }) => {
+    const { habilities, loading, fetchPatientHabilities } = useHabilities();
+    const [selectedHabilities, setSelectedHabilities] = useState<number[]>([]);
+    const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+    const [newNeighborhood, setNewNeighborhood] = useState("");
+    const [cities, setCities] = useState<string[]>([]);
+
+    const { updateCollaborator } = useCollaborator();
     const { register, handleSubmit, setValue } = useForm<Collaborator>({
         defaultValues: collaborator,
     });
-    
-    const { updateCollaborator } = useCollaborator()
 
-    const handleUpdate = async (dataResp: Collaborator) => {
+    const fetchCities = async () => {
+        try {
+            const { data, error } = await supabase
+                .from("cidade_de_atuacao")
+                .select("cidade");
+
+            if (error) throw error;
+            setCities(data.map((city) => city.cidade)); // Atualize o estado com os nomes das cidades.
+        } catch (error) {
+            console.error("Erro ao buscar cidades:", error);
+            toast.error("Não foi possível carregar as cidades.");
+        }
+    };
+
+    const handleUpdate = async (dataResp: Collaborator, e: any) => {
+        if (!dataResp.cpf) {
+            toast.error("Cpf é obrigatório");
+            return;
+        }
         if (!collaborator.funcionario_id) {
             console.error("ID do colaborador está indefinido");
             toast.error("Erro: colaborador ID indefinido.");
@@ -27,12 +53,111 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
         }
 
         try {
-            await updateCollaborator(dataResp, collaborator.funcionario_id);
+            // Atualizar o colaborador
+            await updateCollaborator(dataResp, collaborator.funcionario_id, selectedHabilities);
+
+            // Buscar bairros atuais do banco de dados
+            const { data: bairrosExistentes, error } = await supabase
+                .from("funcionario_bairro")
+                .select("bairro")
+                .eq("funcionario_id", collaborator.funcionario_id);
+
+            if (error) throw error;
+
+            const bairrosNoBanco = bairrosExistentes.map((b) => b.bairro);
+
+            // Determinar bairros a adicionar e remover
+            const bairrosParaAdicionar = selectedNeighborhoods.filter(
+                (bairro) => !bairrosNoBanco.includes(bairro)
+            );
+
+            const bairrosParaRemover = bairrosNoBanco.filter(
+                (bairro) => !selectedNeighborhoods.includes(bairro)
+            );
+
+            // Inserir novos bairros
+            if (bairrosParaAdicionar.length > 0) {
+                const bairrosData = bairrosParaAdicionar.map((bairro) => ({
+                    funcionario_id: collaborator.funcionario_id,
+                    bairro,
+                }));
+
+                const { error: addError } = await supabase
+                    .from("funcionario_bairro")
+                    .insert(bairrosData);
+
+                if (addError) throw addError;
+            }
+
+            // Remover bairros excluídos
+            if (bairrosParaRemover.length > 0) {
+                const { error: removeError } = await supabase
+                    .from("funcionario_bairro")
+                    .delete()
+                    .eq("funcionario_id", collaborator.funcionario_id)
+                    .in("bairro", bairrosParaRemover);
+
+                if (removeError) throw removeError;
+            }
+
             toast.success("Colaborador atualizado com sucesso!");
         } catch (error) {
             toast.error("Erro ao atualizar colaborador.");
         }
     };
+
+    const handleCheckboxChange = (especialidadeId: number) => {
+        setSelectedHabilities((prevSelected) =>
+            prevSelected.includes(especialidadeId)
+                ? prevSelected.filter((id) => id !== especialidadeId)
+                : [...prevSelected, especialidadeId]
+        );
+    };
+
+    const handleAddNeighborhood = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && newNeighborhood.trim() !== "") {
+            setSelectedNeighborhoods((prev) => [...prev, newNeighborhood.trim()]);
+            setNewNeighborhood("");
+        }
+    };
+
+    const handleRemoveNeighborhood = (neighborhood: string) => {
+        setSelectedNeighborhoods((prev) =>
+            prev.filter((item) => item !== neighborhood)
+        );
+    };
+
+    useEffect(() => {
+        if (collaborator.funcionario_id) {
+            const loadPatientHabilities = async () => {
+                const collaboratorHabilities = await fetchPatientHabilities(collaborator.funcionario_id);
+                setSelectedHabilities(collaboratorHabilities);
+            };
+
+            loadPatientHabilities();
+        }
+        fetchCities();
+    }, [collaborator.funcionario_id, fetchPatientHabilities]);
+
+    useEffect(() => {
+        const fetchNeighborhoods = async () => {
+            if (!collaborator.funcionario_id) return;
+            try {
+                const { data, error } = await supabase
+                    .from("funcionario_bairro")
+                    .select("bairro")
+                    .eq("funcionario_id", collaborator.funcionario_id);
+
+                if (error) throw error;
+                setSelectedNeighborhoods(data.map((item) => item.bairro));
+            } catch (error) {
+                console.error("Erro ao carregar bairros:", error);
+                toast.error("Erro ao carregar bairros.");
+            }
+        };
+
+        fetchNeighborhoods();
+    }, [collaborator.funcionario_id]);
 
     return (
         <>
@@ -47,19 +172,19 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                             <TableRow>
                                 <TableCell className="font-semibold">Nome:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="nome" type="text" {...register("nome")} required/>
+                                    <Input id="nome" type="text" {...register("nome")} required />
                                 </TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell className="font-semibold">E-mail:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="email" type="email" {...register("email")} required/>
+                                    <Input id="email" type="email" {...register("email")} required />
                                 </TableCell>
                             </TableRow>
                             <TableRow>
                                 <TableCell className="font-semibold">CPF:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="cpf" type="text" {...register("cpf")} required/>
+                                    <Input id="cpf" type="text" {...register("cpf")} required />
                                 </TableCell>
                             </TableRow>
                             <TableRow>
@@ -71,7 +196,21 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                             <TableRow>
                                 <TableCell className="font-semibold">Cidade:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="cidade" type="text" {...register("cidade")} />
+                                    <Select
+                                        onValueChange={(value) => setValue("cidade", value)}
+                                        defaultValue={collaborator.cidade}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecione uma cidade" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {cities.map((city) => (
+                                                <SelectItem key={city} value={city}>
+                                                    {city}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </TableCell>
                             </TableRow>
                             <TableRow>
@@ -99,10 +238,16 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                                 </TableCell>
                             </TableRow>
                             <TableRow>
+                                <TableCell >Chave Pix</TableCell>
+                                <TableCell className="flex justify-start -mt-2">
+                                    <Input id="chave_pix" type="text" {...register("chave_pix")} />
+                                </TableCell>
+                            </TableRow>
+                            <TableRow>
                                 <TableCell className="font-semibold">Cargo:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
                                     <Select
-                                        {...register("role")} 
+                                        {...register("role")}
                                         defaultValue={collaborator.role}
                                         onValueChange={(value) => setValue("role", value)}
                                     >
@@ -140,12 +285,57 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                                 </TableCell>
                             </TableRow>
                             <TableRow>
-                                <TableCell >Chave Pix</TableCell>
-                                <TableCell className="flex justify-start -mt-2">
-                                    <Input id="chave_pix" type="text" {...register("chave_pix")} />
+                                <TableCell className="font-semibold">Bairros:</TableCell>
+                                <TableCell className="w-full">
+                                    <div className="space-y-2 w-full">
+                                        <Input
+                                            value={newNeighborhood}
+                                            onChange={(e) => setNewNeighborhood(e.target.value)}
+                                            onKeyDown={handleAddNeighborhood}
+                                            placeholder="Digite um bairro e pressione Enter"
+                                            className="w-full"
+                                        />
+                                        <div className="flex flex-wrap gap-2">
+                                            {selectedNeighborhoods.map((neighborhood) => (
+                                                <div
+                                                    key={neighborhood}
+                                                    className="flex items-center px-2 py-1 bg-gray-200 rounded-full"
+                                                >
+                                                    <span className="mr-2">{neighborhood}</span>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleRemoveNeighborhood(neighborhood)}
+                                                        className="text-red-500"
+                                                    >
+                                                        &times;
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </TableCell>
                             </TableRow>
 
+                            <TableRow className="col-span-2 flex">
+                                <TableCell className="font-semibold">Especialidades:</TableCell>
+                                <TableCell className="w-full grid grid-cols-3 gap-2">
+                                    {loading ? (
+                                        <p>Carregando especialidades...</p>
+                                    ) : (
+                                        habilities.map((hability) => (
+                                            <div key={hability.especialidade_id} className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={selectedHabilities.includes(hability.especialidade_id)}
+                                                    onChange={() => handleCheckboxChange(hability.especialidade_id)}
+                                                    className="cursor-pointer"
+                                                />
+                                                <label>{hability.nome}</label>
+                                            </div>
+                                        ))
+                                    )}
+                                </TableCell>
+                            </TableRow>
                         </TableBody>
                     </Table>
                 </div>

@@ -14,6 +14,7 @@ export const collaboratorSchema = z.object({
     status: z.string(),
     role: z.string(),
     cidade: z.string().optional(),
+    bairro: z.string().optional(),
     banco: z.string().optional(),
     agencia: z.string().optional(),
     conta: z.string().optional(),
@@ -37,7 +38,7 @@ const CollaboratorContext = createContext<{
     loading: boolean;
     fetchCollaborator: (filters?: CollaboratorFiltersSchema, pageIndex?: number) => Promise<void>
     fetchCollaboratorNotPaginated: (filters?: CollaboratorFiltersSchema, pageIndex?: number) => Promise<void>
-    updateCollaborator: (updatedData: Partial<Collaborator>, funcionarioId: string) => Promise<void>;
+    updateCollaborator: (updatedData: Partial<Collaborator>, funcionarioId: string, especialidades?: number[]) => Promise<void>;
     addCollaborator: (newData: Omit<Collaborator, 'funcionario_id'>) => Promise<void>;
     getCollaboratorById: (id: string) => Promise<Collaborator | null>;
 }>({
@@ -120,65 +121,6 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    // const addCollaborator = async (newCollaborator: Partial<Collaborator>) => {
-    //     let createdUserId: string | null = null; 
-    //     try {
-    //         if (!newCollaborator.email || !newCollaborator.cpf) {
-    //             throw new Error('Dados inválidos');
-    //         }
-
-    //         const response = await api.post('/auth/v1/signup', {
-    //             email: newCollaborator.email,
-    //             password: newCollaborator.cpf,
-    //         });
-
-    //         const newUserData = response.data;
-    //         createdUserId = newUserData?.user?.id;
-
-    //         if (!createdUserId) {
-    //             throw new Error('Erro ao criar usuário: ID de usuário não retornado');
-    //         }
-
-    //         const collaboratorWithId = {
-    //             ...newCollaborator,
-    //             funcionario_id: createdUserId,
-    //             status: newCollaborator.status || "Ativo",
-    //         };
-
-    //         const { data, error: insertError } = await supabase
-    //             .from('funcionario')
-    //             .insert(collaboratorWithId)
-    //             .select()
-    //             .single();
-
-    //         if (insertError || !data) {
-    //             throw new Error(`Erro ao inserir colaborador: ${insertError?.message}`);
-    //         }
-
-    //         if (collaborators.length >= 10) {
-    //             setCollaboratorsNotPaginated((prevCollaborators) => [...prevCollaborators, data]);
-    //         } else {
-    //             setCollaborators((prevCollaborators) => [...prevCollaborators, data]);
-    //             setCollaboratorsNotPaginated((prevCollaborators) => [...prevCollaborators, data]);
-    //         }
-
-    //         toast.success("Colaborador adicionado com sucesso!");
-    //     } catch (error) {
-    //         console.error("Erro ao adicionar colaborador:", error);
-
-    //         if (createdUserId) {
-    //             try {
-    //                 await api.delete(`/auth/v1/admin/users/${createdUserId}`);
-    //                 console.log("Usuário revertido com sucesso na tabela de autenticação");
-    //             } catch (deleteError) {
-    //                 console.error("Erro ao reverter usuário na tabela de autenticação:", deleteError);
-    //             }
-    //         }
-
-    //         toast.error("Erro ao adicionar colaborador!");
-    //     }
-    // };
-    
     const addCollaborator = async (newCollaborator: Partial<Collaborator>) => {
         let createdUserId: string | null = null;
 
@@ -253,32 +195,54 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    async function updateCollaborator(updatedData: Partial<Collaborator>, funcionarioId: string) {
-        try {
-            const { error: updateError } = await supabase
-                .from('funcionario')
-                .update(updatedData)
-                .eq('funcionario_id', funcionarioId);
+    const updateCollaborator = useCallback(async (updatedCollaborator: Partial<Collaborator>, funcionarioId: string, especialidades?: number[]) => {
+        setLoading(true);
 
-            if (updateError) {
-                console.error("Erro ao atualizar funcionario:", updateError);
-                throw new Error("Erro ao atualizar funcionario");
+        try {
+            const parsedCollaborator = collaboratorSchema.safeParse(updatedCollaborator);
+            if (!parsedCollaborator.success) {
+                console.error('Erro na validação do funcionario:', parsedCollaborator.error);
+                setLoading(false);
+                return;
             }
 
-            setCollaborators((prevCollaborators) =>
-                prevCollaborators.map((collaborator) =>
-                    collaborator.funcionario_id === funcionarioId
-                        ? { ...collaborator, ...updatedData }
-                        : collaborator
-                )
-            );
+            const { data, error } = await supabase
+                .from('funcionario')
+                .update(parsedCollaborator.data)
+                .eq('funcionario_id', funcionarioId)
+                .select();
 
-            toast.success("Colaborador atualizado com sucesso!");
+            if (error) {
+                console.error('Erro ao atualizar funcionario:', error);
+            } else if (data) {
+                setCollaborators((prev) => prev.map((patient) => (patient.funcionario_id === data[0].funcionario_id ? data[0] : patient)));
+
+                if (especialidades) {
+                    await supabase
+                        .from('funcionario_especialidade')
+                        .delete()
+                        .eq('funcionario_id', funcionarioId);
+
+                    if (especialidades.length > 0) {
+                        const especialidadesData = especialidades.map(especialidadeId => ({
+                            funcionario_id: funcionarioId,
+                            especialidade_id: especialidadeId
+                        }));
+
+                        await supabase
+                            .from('funcionario_especialidades')
+                            .insert(especialidadesData);
+                    }
+                }
+            }
+            toast.success("Colaborador adicionado com sucesso!");
         } catch (error) {
-            console.error("Erro geral ao atualizar funcionario:", error);
-            toast.error("Erro ao atualizar colaborador!");
+            console.error('Erro inesperado ao atualizar colaborador:', error);
+            toast.error("Falha ao adicionar colaborador!");
+        } finally {
+            setLoading(false);
         }
-    }
+    }, []);
 
     const getCollaboratorById = async (id: string): Promise<Collaborator | null> => {
         const { data, error } = await supabase
