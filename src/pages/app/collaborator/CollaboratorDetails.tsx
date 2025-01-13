@@ -63,7 +63,7 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
         );
     };
 
-    const handleUpdate = async (dataResp: Collaborator, e: any) => {
+    const handleUpdate = async (dataResp: Collaborator) => {
         if (!dataResp.cpf) {
             toast.error("Cpf é obrigatório");
             return;
