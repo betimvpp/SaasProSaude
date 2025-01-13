@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useHabilities } from "@/contexts/habilitiesContext";
 import supabase from "@/lib/supabase";
+import { AArrowDown } from "lucide-react";
 
 export interface CollaboratorDetailsProps {
     collaborator: Collaborator;
@@ -41,6 +42,27 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
         }
     };
 
+    const handleCheckboxChange = (especialidadeId: number) => {
+        setSelectedHabilities((prevSelected) =>
+            prevSelected.includes(especialidadeId)
+                ? prevSelected.filter((id) => id !== especialidadeId)
+                : [...prevSelected, especialidadeId]
+        );
+    };
+
+    const handleAddNeighborhood = () => {
+        if (newNeighborhood !== "") {
+            setSelectedNeighborhoods((prev) => [...prev, newNeighborhood]);
+            setNewNeighborhood("");
+        }
+    };
+
+    const handleRemoveNeighborhood = (neighborhood: string) => {
+        setSelectedNeighborhoods((prev) =>
+            prev.filter((item) => item !== neighborhood)
+        );
+    };
+
     const handleUpdate = async (dataResp: Collaborator, e: any) => {
         if (!dataResp.cpf) {
             toast.error("Cpf é obrigatório");
@@ -53,10 +75,8 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
         }
 
         try {
-            // Atualizar o colaborador
             await updateCollaborator(dataResp, collaborator.funcionario_id, selectedHabilities);
 
-            // Buscar bairros atuais do banco de dados
             const { data: bairrosExistentes, error } = await supabase
                 .from("funcionario_bairro")
                 .select("bairro")
@@ -66,7 +86,6 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
 
             const bairrosNoBanco = bairrosExistentes.map((b) => b.bairro);
 
-            // Determinar bairros a adicionar e remover
             const bairrosParaAdicionar = selectedNeighborhoods.filter(
                 (bairro) => !bairrosNoBanco.includes(bairro)
             );
@@ -75,7 +94,6 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                 (bairro) => !selectedNeighborhoods.includes(bairro)
             );
 
-            // Inserir novos bairros
             if (bairrosParaAdicionar.length > 0) {
                 const bairrosData = bairrosParaAdicionar.map((bairro) => ({
                     funcionario_id: collaborator.funcionario_id,
@@ -89,7 +107,6 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                 if (addError) throw addError;
             }
 
-            // Remover bairros excluídos
             if (bairrosParaRemover.length > 0) {
                 const { error: removeError } = await supabase
                     .from("funcionario_bairro")
@@ -100,31 +117,9 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                 if (removeError) throw removeError;
             }
 
-            toast.success("Colaborador atualizado com sucesso!");
         } catch (error) {
             toast.error("Erro ao atualizar colaborador.");
         }
-    };
-
-    const handleCheckboxChange = (especialidadeId: number) => {
-        setSelectedHabilities((prevSelected) =>
-            prevSelected.includes(especialidadeId)
-                ? prevSelected.filter((id) => id !== especialidadeId)
-                : [...prevSelected, especialidadeId]
-        );
-    };
-
-    const handleAddNeighborhood = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter" && newNeighborhood.trim() !== "") {
-            setSelectedNeighborhoods((prev) => [...prev, newNeighborhood.trim()]);
-            setNewNeighborhood("");
-        }
-    };
-
-    const handleRemoveNeighborhood = (neighborhood: string) => {
-        setSelectedNeighborhoods((prev) =>
-            prev.filter((item) => item !== neighborhood)
-        );
     };
 
     useEffect(() => {
@@ -288,13 +283,18 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                                 <TableCell className="font-semibold">Bairros:</TableCell>
                                 <TableCell className="w-full">
                                     <div className="space-y-2 w-full">
-                                        <Input
-                                            value={newNeighborhood}
-                                            onChange={(e) => setNewNeighborhood(e.target.value)}
-                                            onKeyDown={handleAddNeighborhood}
-                                            placeholder="Digite um bairro e pressione Enter"
-                                            className="w-full"
-                                        />
+                                        <span className="flex space-x-1">
+                                            <Input
+                                                value={newNeighborhood}
+                                                onChange={(e) => setNewNeighborhood(e.target.value)}
+                                                // onKeyDown={handleAddNeighborhood}
+                                                placeholder="Digite um bairro e pressione Enter"
+                                                className="w-full"
+                                            />
+                                            <button type="button" onClick={handleAddNeighborhood}>
+                                                <AArrowDown />
+                                            </button>
+                                        </span>
                                         <div className="flex flex-wrap gap-2">
                                             {selectedNeighborhoods.map((neighborhood) => (
                                                 <div
