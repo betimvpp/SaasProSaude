@@ -276,6 +276,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     <SelectItem value="SN">SN</SelectItem>
                                     <SelectItem value="P">P</SelectItem>
                                     <SelectItem value="M">M</SelectItem>
+                                    <SelectItem value="T">T</SelectItem>
                                     <SelectItem value="GR">GR</SelectItem>
                                 </SelectContent>
                             </Select>

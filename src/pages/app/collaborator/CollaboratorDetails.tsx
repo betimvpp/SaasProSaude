@@ -288,7 +288,7 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                                                 value={newNeighborhood}
                                                 onChange={(e) => setNewNeighborhood(e.target.value)}
                                                 // onKeyDown={handleAddNeighborhood}
-                                                placeholder="Digite um bairro e pressione Enter"
+                                                placeholder="Digite um bairro e clique no botão"
                                                 className="w-full"
                                             />
                                             <button type="button" onClick={handleAddNeighborhood}>
