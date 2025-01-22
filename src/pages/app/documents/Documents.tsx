@@ -28,7 +28,7 @@ export const Documents = () => {
       <Helmet title="Documentos" />
       <h1 className="text-4xl font-bold textslate mb-2">Painel de Documentos</h1>
       <DocumentsFilters />
-      <div className="w-full h-full max-h-[700px] shadow-lg border rounded-md">
+      <div className="w-full h-full shadow-lg border rounded-md">
         <DocumentsTable />
       </div>
       <Pagination

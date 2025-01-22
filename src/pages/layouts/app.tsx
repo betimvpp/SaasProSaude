@@ -24,7 +24,7 @@ export function AppLayout() {
 
     checkSession();
 
-    const { data: authListener } = supabase.auth.onAuthStateChange(( session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((session) => {
       if (session === null) {
         navigate('/login', { replace: true });
       }
@@ -38,15 +38,15 @@ export function AppLayout() {
   if (loading) return null;
 
   return (
-    <div className='h-screen flex overflow-hidden'>
+    <div className='h-screen flex overflow-x-hidden'>
       <div className='h-full min-w-[12%] p-8 default:bg-primary  shadow-lg'>
         <Profile />
         <SideBar />
       </div>
-      <Separator orientation='vertical' />
-      <div className='w-full h-screen p-8 flex gap-2'>
+      <Separator orientation='vertical' className='h-full' />
+      <div className='w-full h-screen p-8 flex'>
         <Outlet />
-        <span className="absolute top-8 right-8">
+        <span className="relative ">
           <ModeToggle />
         </span>
       </div>

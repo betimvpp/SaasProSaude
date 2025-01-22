@@ -29,9 +29,9 @@ export const CollaboratorTabs = ({ collaborator }: CollaboratorDetailsProps) => 
     }, [user, getCollaboratorById]);
 
     return (
-        <DialogContent className="min-w-[90vw] h-[90vh]">
+        <DialogContent className="min-w-[90vw] h-[90vh] overflow-y-scroll">
             <Tabs defaultValue="details" className="flex flex-col items-center justify-center w-full h-full">
-                <TabsList className="">
+                <TabsList>
                     <TabsTrigger value="details">Detalhes</TabsTrigger>
                     <TabsTrigger value="schedules">Escalas</TabsTrigger>
                 </TabsList>

@@ -81,7 +81,7 @@ export const CollaboratorAdditioner = () => {
     }, []);
 
     return (
-        <DialogContent className="min-w-[1000px]">
+        <DialogContent className="min-w-[90vw]">
             <DialogHeader>
                 <DialogTitle>Adicione um colaborador: </DialogTitle>
             </DialogHeader>

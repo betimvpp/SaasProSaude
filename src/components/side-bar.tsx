@@ -1,5 +1,5 @@
 import { NavLink } from './nav-link'
-import { BadgeAlert, CalendarDays, ChartSplineIcon, Contact2, FileText, HandCoins, MessageCircle, Speech, Stethoscope } from 'lucide-react'
+import { BadgeAlert, CalendarDays, ChartSplineIcon, Contact2, FileText, HandCoins, Speech, Stethoscope } from 'lucide-react'
 import { Separator } from './ui/separator'
 import { useAuth } from '@/contexts/authContext'
 import { useNavigate } from 'react-router-dom';
@@ -68,10 +68,10 @@ export function SideBar() {
                     <HandCoins className='h-6 w-6' />
                     Pagamentos
                 </NavLink>
-                <NavLink to="/mensagens" disabled={isRestricted}>
+                {/* <NavLink to="/mensagens" disabled={isRestricted}>
                     <MessageCircle className='h-6 w-6' />
                     Mensagens
-                </NavLink>
+                </NavLink> */}
             </nav>
             <Separator className='mt-6 mb-2 w-full' />
             <Button className='w-32' variant={'destructive'} onClick={handleLogout}>

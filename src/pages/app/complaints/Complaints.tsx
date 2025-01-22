@@ -28,7 +28,7 @@ export const Complaints = () => {
       <Helmet title="Reclamações" />
       <h1 className="text-4xl font-bold textslate mb-2">Painel de Reclamações</h1>
       <ComplaintsFilters />
-      <div className="w-full h-full max-h-[700px] shadow-lg border rounded-md">
+      <div className="w-full h-full shadow-lg border rounded-md">
         <ComplaintsTable />
       </div>
       <Pagination

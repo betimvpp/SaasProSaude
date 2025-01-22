@@ -58,7 +58,7 @@ export const CityAdditioner = () => {
     const addCityToDatabase = useCallback(async (name: string) => {
         try {
             const { data, error } = await supabase
-                .from('cidade_de_atuacao') 
+                .from('cidade_de_atuacao')
                 .insert([{ cidade: name }]);
 
             if (error) throw error;
@@ -87,7 +87,7 @@ export const CityAdditioner = () => {
     };
 
     return (
-        <DialogContent className="min-w-[1000px]">
+        <DialogContent className="min-w-[90vw]">
             <DialogHeader>
                 <DialogTitle>Adicionar Cidade</DialogTitle>
                 <DialogDescription>Adicione cidades que ainda não estão cadastradas:</DialogDescription>

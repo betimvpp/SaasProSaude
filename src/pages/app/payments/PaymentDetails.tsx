@@ -3,10 +3,10 @@ import { TableSkeleton } from '@/components/table-skeleton';
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PaymentInfo } from '@/contexts/paymentContext';
-import { usePayment } from '@/contexts/paymentContext'; // Importe o contexto
+import { usePayment } from '@/contexts/paymentContext'; 
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Adicione se necessário para suportar tabelas
+import 'jspdf-autotable'; 
 import { useEffect, useRef, useState } from 'react';
 
 declare module 'jspdf' {
@@ -55,8 +55,8 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
     const generatePDF = () => {
         const doc = new jsPDF();
         const header = `Colaborador: ${payment.nome}\nChave PIX: ${payment.chave_pix || 'Não informado'}\nTotal (AR): ${collaboratorScalesData
-                .filter(scale => scale.pagamentoAR_AV === 'AR')
-                .reduce((total, scale) => total + (scale.valor_pago || 0), 0)
+            .filter(scale => scale.pagamentoAR_AV === 'AR')
+            .reduce((total, scale) => total + (scale.valor_pago || 0), 0)
             }`;
 
         // Cabeçalho
@@ -66,7 +66,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         // Corpo da tabela
         const tableData = collaboratorScalesData.map(scale => [
             scale.paciente_nome,
-            scale.telefone || 'Telefone não definido',
+            scale.chave_pix || 'Chave Pix Não Definida',
             scale.tipo_servico,
             getServiceTime(scale.tipo_servico!, 'Horário não definido'),
             scale?.data && !isNaN(new Date(scale.data).getTime()) ? format(new Date(scale.data), 'dd/MM/yyyy') : 'Data inválida',
@@ -93,7 +93,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
     }, [payment, fetchCollaboratorScales, pageIndex]);
 
     return (
-        <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col'>
+        <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col overflow-y-scroll'>
             <DialogHeader>
                 <DialogTitle>Escalas do Colaborador: {payment.nome}</DialogTitle>
                 <DialogDescription>

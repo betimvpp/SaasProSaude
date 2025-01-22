@@ -38,7 +38,7 @@ export const HumanResourceAdditioner = () => {
     };
 
     return (
-        <DialogContent className="min-w-[1000px]">
+        <DialogContent className="min-w-[90vw] overflow-y-scroll">
             <DialogHeader>
                 <DialogTitle>Adicionar Gestor:</DialogTitle>
             </DialogHeader>

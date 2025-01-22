@@ -12,7 +12,7 @@ export function Pagination({ pageIndex, totalCount, perPage, onPageChange }: Pag
     const pages = Math.ceil(totalCount / perPage) || 1;
 
     return (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pb-4">
             <span className="text-sm text-muted-foreground">
                 Total de {totalCount} item(s)
             </span>

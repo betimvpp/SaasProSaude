@@ -2,7 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
 
 @layer base {
   :root {
@@ -60,7 +66,6 @@
     --chart-5: 340 75% 55%;
   }
 }
-
 
 @layer base {
   * {

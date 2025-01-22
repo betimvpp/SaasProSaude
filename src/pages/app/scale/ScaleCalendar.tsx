@@ -35,7 +35,7 @@ export const ScaleCalendar = () => {
     };
 
     return (
-        <div className="p-4 w-full h-full m-auto overflow-hidden">
+        <div className="p-4 w-full h-full m-auto">
             <div className="flex justify-between items-center mb-4">
                 <button onClick={handlePreviousMonth} className="text-lg font-bold">
                     <ChevronLeft />

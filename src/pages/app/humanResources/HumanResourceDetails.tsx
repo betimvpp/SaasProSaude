@@ -37,7 +37,7 @@ export const HumanResourceDetails = ({ humanResource }: HumanResourceDetailsProp
     };
 
     return (
-        <DialogContent className="min-w-[1000px]">
+        <DialogContent className="min-w-[90vw] overflow-y-scroll">
             <DialogHeader>
                 <DialogTitle>Detalhes do Gestor: {humanResource.nome}</DialogTitle>
                 <DialogDescription>Status: {humanResource.status}</DialogDescription>

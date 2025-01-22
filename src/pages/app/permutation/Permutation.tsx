@@ -33,7 +33,7 @@ export const Permutation = () => {
                 - Permutas
             </h1>
             <PermutationFilters />
-            <div className="w-full h-full max-h-[700px] shadow-lg border rounded-md">
+            <div className="w-full h-full shadow-lg border rounded-md">
                 <PermutationTable />
                 {serviceExchanges?.length === 0 && loading === false &&
                     <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhuma permuta encontrada!</div>

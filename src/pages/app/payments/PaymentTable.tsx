@@ -6,13 +6,13 @@ import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
 import { useEffect, useState } from 'react';
 import { TableSkeleton } from '@/components/table-skeleton';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable'; // Certifique-se de instalar e importar a extensão autoTable
+import 'jspdf-autotable';
 
 interface PaymentTableProps {
     selectedMonth: string;
 }
 export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
-    const { paymentData, loading } = usePayment();
+    const { paymentData, paymentDataNotPaginated, loading } = usePayment();
     const { user } = useAuth();
     const { getCollaboratorById } = useCollaborator();
     const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
@@ -27,21 +27,18 @@ export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
         }
     }, [user, getCollaboratorById]);
 
-    // Define o mês atual se o selectedMonth estiver vazio ou indefinido
-    const currentMonth = selectedMonth || new Date().toISOString().slice(0, 7); // Formato 'YYYY-MM'
-
-    // Manipula a data corretamente para garantir o mês correto
-    const [year, month] = currentMonth.split('-').map(Number); // Divide o "YYYY-MM" em partes
-    const monthDate = new Date(year, month - 1); // Cria a data com o mês correto
+    const currentMonth = selectedMonth || new Date().toISOString().slice(0, 7); 
+    const [year, month] = currentMonth.split('-').map(Number); 
+    const monthDate = new Date(year, month - 1); 
     const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(monthDate);
 
     const generatePDF = () => {
         const doc = new jsPDF();
 
         doc.setFontSize(12);
-        doc.text(`Relatório de Pagamentos\nMês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`, 14, 10); // Capitalizando o nome do mês
+        doc.text(`Relatório de Pagamentos\nMês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`, 14, 10);
 
-        const tableData = paymentData.map((payment) => ([
+        const tableData = paymentDataNotPaginated.map((payment) => ([
             payment.nome,
             payment.telefone,
             payment.cargo,

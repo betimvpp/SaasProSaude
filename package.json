@@ -27,6 +27,7 @@
     "coopervidasaas": "file:",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
+    "firebase": "^11.2.0",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "localforage": "^1.10.0",

@@ -90,7 +90,7 @@ export const PatientAdditioner = () => {
     }, [user, getCollaboratorById]);
 
     return (
-        <DialogContent className="min-w-[90vw]">
+        <DialogContent className="min-w-[90vw] overflow-y-scroll">
             <DialogHeader>
                 <DialogTitle>Adicionar Paciente</DialogTitle>
             </DialogHeader>

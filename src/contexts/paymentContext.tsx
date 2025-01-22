@@ -36,6 +36,7 @@ const PaymentContext = createContext<{
     fetchCollaboratorScales: (funcionario_id: string, month: string, pageIndex?: number) => Promise<void>;
     collaboratorScalesData: PaymentInfo[];
     paymentData: PaymentInfo[];
+    paymentDataNotPaginated: PaymentInfo[];
     loading: boolean;
     totalCount: number;
     totalScalesCount: number;
@@ -44,6 +45,7 @@ const PaymentContext = createContext<{
     fetchCollaboratorScales: async () => { },
     collaboratorScalesData: [],
     paymentData: [],
+    paymentDataNotPaginated: [],
     loading: false,
     totalCount: 0,
     totalScalesCount: 0
@@ -54,6 +56,7 @@ export const usePayment = () => useContext(PaymentContext);
 export const PaymentProvider = ({ children }: { children: ReactNode }) => {
     const [collaboratorScalesData, setCollaboratorScalesData] = useState<PaymentInfo[]>([]);
     const [paymentData, setPaymentData] = useState<PaymentInfo[]>([]);
+    const [paymentDataNotPaginated, setPaymentDataNotPaginated] = useState<PaymentInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [totalCount, setTotalCount] = useState(0);
     const [totalScalesCount, setTotalScalesCount] = useState(0);
@@ -65,44 +68,23 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
             const offset = pageIndex * perPage;
             const { collaboratorName, role, month } = filters;
 
-            let totalQuery = supabase
+            let baseQuery = supabase
                 .from("funcionario")
-                .select("*", { count: "exact", head: true })
+                .select("*")
                 .neq("role", "rh")
                 .neq("role", "admin");
 
             if (collaboratorName) {
-                totalQuery = totalQuery.ilike("nome", `%${collaboratorName}%`);
+                baseQuery = baseQuery.ilike("nome", `%${collaboratorName}%`);
             }
 
             if (role && role !== "all") {
-                totalQuery = totalQuery.eq("role", role);
+                baseQuery = baseQuery.eq("role", role);
             }
 
-            const { count: totalCount, error: totalError } = await totalQuery;
-            if (totalError) {
-                console.error("Erro ao buscar total de colaboradores:", totalError);
-                return;
-            }
-            let query = supabase
-                .from("funcionario")
-                .select("funcionario_id, nome, role")
-                .range(offset, offset + perPage - 1)
-                .neq("role", "rh")
-                .neq("role", "admin");
-
-            if (collaboratorName) {
-                query = query.ilike("nome", `%${collaboratorName}%`);
-            }
-
-            if (role && role !== "all") {
-                query = query.eq("role", role);
-            }
-
-            const { data: collaborators, error: collaboratorError } = await query;
-
-            if (collaboratorError) {
-                console.error("Erro ao buscar colaboradores:", collaboratorError);
+            const { data: allCollaborators, error: fullError } = await baseQuery;
+            if (fullError) {
+                console.error("Erro ao buscar colaboradores filtrados:", fullError);
                 setPaymentData([]);
                 return;
             }
@@ -114,7 +96,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
 
             const { data: allScales, error: scalesError } = await supabase
                 .from("escala")
-                .select("funcionario_id, valor_recebido, valor_pago, data, pagamentoAR_AV")
+                .select("*")
                 .gte("data", `${currentMonth}-01`)
                 .lte("data", `${currentMonth}-${lastDayOfMonth}`);
 
@@ -124,32 +106,42 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
-            const paymentResults: PaymentInfo[] = collaborators.map((collaborator) => {
-                const collaboratorScales = allScales.filter(
-                    (scale) => scale.funcionario_id === collaborator.funcionario_id
-                );
-    
-                const valorRecebido = collaboratorScales.reduce(
-                    (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_recebido || 0) : 0),
-                    0
-                );
-                const valorPago = collaboratorScales.reduce(
-                    (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_pago || 0) : 0),
-                    0
-                );
-    
-                return {
-                    funcionario_id: collaborator.funcionario_id,
-                    nome: collaborator.nome,
-                    cargo: collaborator.role,
-                    valor_recebido: valorRecebido,
-                    valor_pago: valorPago,
-                    mes: currentMonth
-                };
-            });
+            const mapPayments = (collaborators: any) =>
+                collaborators.map((collaborator: any) => {
+                    const collaboratorScales = allScales.filter(
+                        (scale) => scale.funcionario_id === collaborator.funcionario_id
+                    );
 
-            setPaymentData(paymentResults);
-            setTotalCount(totalCount || 0);
+                    const valorRecebido = collaboratorScales.reduce(
+                        (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_recebido || 0) : 0),
+                        0
+                    );
+                    const valorPago = collaboratorScales.reduce(
+                        (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_pago || 0) : 0),
+                        0
+                    );
+
+                    return {
+                        funcionario_id: collaborator.funcionario_id,
+                        nome: collaborator.nome,
+                        cargo: collaborator.role,
+                        telefone: collaborator.telefone,
+                        chave_pix: collaborator.chave_pix,
+                        valor_recebido: valorRecebido,
+                        valor_pago: valorPago,
+                        mes: currentMonth,
+                    };
+                });
+
+            const allPayments = mapPayments(allCollaborators).filter(
+                (payment: any) => payment.valor_recebido !== 0 || payment.valor_pago !== 0
+            );
+
+            const paginatedPayments = allPayments.slice(offset, offset + perPage);
+
+            setPaymentData(paginatedPayments);
+            setPaymentDataNotPaginated(allPayments);
+            setTotalCount(allPayments.length); 
         } catch (error) {
             console.error("Erro ao buscar pagamentos:", error);
             setPaymentData([]);
@@ -157,6 +149,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
             setLoading(false);
         }
     }, []);
+
 
     const fetchCollaboratorScales = useCallback(
         async (funcionario_id: string = '', month: string = '', pageIndex: number = 0) => {
@@ -182,7 +175,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
 
                 const { data: allScales, error: scalesError } = await supabase
                     .from("escala")
-                    .select("escala_id, paciente_id, funcionario_id, data, tipo_servico, valor_recebido, valor_pago, pagamentoAR_AV")
+                    .select("*")
                     .eq("funcionario_id", funcionario_id)
                     .gte("data", `${month}-01`)
                     .lte("data", `${month}-${lastDayOfMonth}`)
@@ -235,7 +228,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
     );
 
     return (
-        <PaymentContext.Provider value={{ fetchPayments, loading, paymentData, totalCount, collaboratorScalesData, fetchCollaboratorScales, totalScalesCount }}>
+        <PaymentContext.Provider value={{ fetchPayments, loading, paymentData, paymentDataNotPaginated, totalCount, collaboratorScalesData, fetchCollaboratorScales, totalScalesCount }}>
             {children}
         </PaymentContext.Provider>
     )
