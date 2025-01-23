@@ -1,25 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination";
-import {
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
-    TableHeader,
-    TableRow,
-    TableHead,
-    TableBody,
-    Table,
-    TableCell,
-} from "@/components/ui/table";
+import { DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import { TableHeader, TableRow, TableHead, TableBody, Table, TableCell, } from "@/components/ui/table";
 import { Patient } from "@/contexts/patientContext";
 import { Scale } from "@/contexts/scaleContext";
 import supabase from "@/lib/supabase";
-// import { PatientTableSkeleton } from "./PatientTableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Patient; isAdmin: string; isLoading: boolean; }) => {
@@ -241,17 +230,23 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                                     )}
                                     {editingRow === scale.escala_id ? (
                                         <TableCell className="text-center ">
-                                            <Input
-                                                className="w-16 h-3 m-auto"
-                                                type="text"
-                                                value={editedValues.pagamentoAR_AV}
-                                                onChange={(e) =>
+                                            <Select
+                                                onValueChange={(value) =>
                                                     setEditedValues((prev) => ({
                                                         ...prev,
-                                                        pagamentoAR_AV: e.target.value,
+                                                        pagamentoAR_AV: value,
                                                     }))
                                                 }
-                                            />
+                                                defaultValue={editedValues.pagamentoAR_AV}
+                                            >
+                                                <SelectTrigger className="w-16 h-3 m-auto">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem className="cursor-pointer" value="AV">AV</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="AR">AR</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </TableCell>
                                     ) : (
                                         <TableCell>{scale.pagamentoAR_AV || "N/A"}</TableCell>
@@ -259,17 +254,27 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
 
                                     <TableCell className="text-center">
                                         {editingRow === scale.escala_id ? (
-                                            <Input
-                                                className="w-16 h-3 m-auto"
-                                                type="text"
-                                                value={editedValues.tipo_servico}
-                                                onChange={(e) =>
+                                            <Select
+                                                onValueChange={(value) =>
                                                     setEditedValues((prev) => ({
                                                         ...prev,
-                                                        tipo_servico: e.target.value,
+                                                        tipo_servico: value,
                                                     }))
                                                 }
-                                            />
+                                                defaultValue={editedValues.tipo_servico}
+                                            >
+                                                <SelectTrigger className="w-16 h-3 m-auto">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem className="cursor-pointer" value="SD">SD</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="SN">SN</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="P">P</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="M">M</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="T">T</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="GR">GR</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         ) : (
                                             scale.tipo_servico
                                         )}
@@ -312,7 +317,6 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                             ))}
                         </TableBody>
                     }
-                    {/* {loading === true && scales.length <= 0 && <PatientTableSkeleton />} */}
                 </Table>
                 {loading && <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Carregando Escalas</div>}
                 {!loading && scales.length <= 0 && <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhuma escala encontrado!</div>}

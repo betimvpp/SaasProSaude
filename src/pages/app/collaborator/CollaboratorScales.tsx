@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination";
-import {
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import {
-    TableHeader,
-    TableRow,
-    TableHead,
-    TableBody,
-    Table,
-    TableCell,
-} from "@/components/ui/table";
+import { DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
+import { TableHeader, TableRow, TableHead, TableBody, Table, TableCell, } from "@/components/ui/table";
 import { Collaborator } from "@/contexts/collaboratorContext";
 import { Scale } from "@/contexts/scaleContext";
 import supabase from "@/lib/supabase";
@@ -20,6 +9,7 @@ import supabase from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { collaborator: Collaborator; isAdmin: string; isLoading: boolean; }) => {
@@ -64,26 +54,26 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                 return;
             }
 
-            const collaboratorPromises = allScales.map(async (scale): Promise<Scale | null> => {
-                const { data: collaboratorData, error: collaboratorError } = await supabase
-                    .from("funcionario")
+            const patientPromises = allScales.map(async (scale): Promise<Scale | null> => {
+                const { data: patientData, error: patientError } = await supabase
+                    .from("paciente")
                     .select("nome, cpf, telefone")
-                    .eq("funcionario_id", scale.funcionario_id)
+                    .eq("paciente_id", scale.paciente_id)
                     .single();
 
-                if (collaboratorError) {
-                    console.error("Erro ao buscar colaborador:", collaboratorError);
+                if (patientError) {
+                    console.error("Erro ao buscar paciente:", patientError);
                     return null;
                 }
 
                 return {
                     ...scale,
-                    nomePaciente: collaboratorData?.nome,
+                    nomePaciente: patientData?.nome,
                 };
             });
 
-            const scalesWithCollaborators = await Promise.all(collaboratorPromises);
-            const validScales = scalesWithCollaborators.filter((scale): scale is Scale => scale !== null);
+            const scalesWithPatients = await Promise.all(patientPromises);
+            const validScales = scalesWithPatients.filter((scale): scale is Scale => scale !== null);
 
             setCollaboratorScalesData(validScales);
             setTotalScalesCount(totalScalesCount || 0);
@@ -146,7 +136,7 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
             if (error) throw error;
 
-            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex); // Atualiza os dados
+            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex);
         } catch (error) {
             console.error("Erro ao excluir escala:", error);
         }
@@ -237,17 +227,23 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
                                     {editingRow === scale.escala_id ? (
                                         <TableCell className="text-center ">
-                                            <Input
-                                                className="w-16 h-3 m-auto"
-                                                type="text"
-                                                value={editedValues.pagamentoAR_AV}
-                                                onChange={(e) =>
+                                            <Select
+                                                onValueChange={(value) =>
                                                     setEditedValues((prev) => ({
                                                         ...prev,
-                                                        pagamentoAR_AV: e.target.value,
+                                                        pagamentoAR_AV: value,
                                                     }))
                                                 }
-                                            />
+                                                defaultValue={editedValues.pagamentoAR_AV}
+                                            >
+                                                <SelectTrigger className="w-16 h-3 m-auto">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem className="cursor-pointer" value="AV">AV</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="AR">AR</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         </TableCell>
                                     ) : (
                                         <TableCell>{scale.pagamentoAR_AV || "N/A"}</TableCell>
@@ -255,17 +251,27 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
                                     <TableCell className="text-center">
                                         {editingRow === scale.escala_id ? (
-                                            <Input
-                                                className="w-16 h-3 m-auto"
-                                                type="text"
-                                                value={editedValues.tipo_servico}
-                                                onChange={(e) =>
+                                            <Select
+                                                onValueChange={(value) =>
                                                     setEditedValues((prev) => ({
                                                         ...prev,
-                                                        tipo_servico: e.target.value,
+                                                        tipo_servico: value,
                                                     }))
                                                 }
-                                            />
+                                                defaultValue={editedValues.tipo_servico}
+                                            >
+                                                <SelectTrigger className="w-16 h-3 m-auto">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem className="cursor-pointer" value="SD">SD</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="SN">SN</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="P">P</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="M">M</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="T">T</SelectItem>
+                                                    <SelectItem className="cursor-pointer" value="GR">GR</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                         ) : (
                                             scale.tipo_servico
                                         )}
