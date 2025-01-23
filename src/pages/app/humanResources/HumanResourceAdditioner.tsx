@@ -12,10 +12,6 @@ export const HumanResourceAdditioner = () => {
     const { addHumanResources } = useHumanResources();
 
     const handleAdd = async (dataResp: HumanResource) => {
-        if (!dataResp.status) {
-            toast.error("Status é obrigatório");
-            return;
-        }
         if (!dataResp.nome) {
             toast.error("Nome é obrigatório");
             return;
@@ -28,7 +24,7 @@ export const HumanResourceAdditioner = () => {
             toast.error("Cpf é obrigatório");
             return;
         }
-        
+
         try {
             await addHumanResources(dataResp);
             reset();

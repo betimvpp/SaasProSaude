@@ -76,14 +76,9 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                     return null;
                 }
 
-                const formattedDate = scale.data
-                    ? new Date(scale.data).toLocaleDateString("pt-BR")
-                    : undefined;
-
                 return {
                     ...scale,
                     nomePaciente: collaboratorData?.nome,
-                    data: formattedDate!,
                 };
             });
 

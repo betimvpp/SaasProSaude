@@ -4,7 +4,7 @@ import { useScale } from "@/contexts/scaleContext";
 import { PermutationRow } from "./PermutationRow";
 
 export const PermutationTable = () => {
-    const { serviceExchanges } = useScale();
+    const { serviceExchangesNotPaginated } = useScale();
 
     return (
         <Table>
@@ -21,7 +21,7 @@ export const PermutationTable = () => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {serviceExchanges && serviceExchanges.map((serviceExchanged) => (
+                {serviceExchangesNotPaginated && serviceExchangesNotPaginated.map((serviceExchanged) => (
                     <PermutationRow key={serviceExchanged.troca_servico_id} scale={serviceExchanged} />
                 ))}
             </TableBody>
