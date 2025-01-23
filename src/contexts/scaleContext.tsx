@@ -222,14 +222,13 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
         let query = supabase
             .from('troca_servicos')
             .select(`
-                *,
-                escala_origem:escala_origem_id (
-                    paciente:paciente_id (nome)
-                ),
-                funcionario_origem:funcionario_origem_id (nome),
-                funcionario_destino:funcionario_destino_id (nome)
-            `)
-            .eq('status_gestor', 'pendente')
+            *,
+            funcionario_origem:funcionario_origem_id ( nome ),
+            funcionario_destino:funcionario_destino_id ( nome ),
+            escala_origem:escala_origem_id (
+                paciente:paciente_id ( nome )
+            )
+        `)
             .range(pageIndex * 10, pageIndex * 10 + 9);
 
         if (filters.dataOrigem) {
@@ -337,7 +336,6 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
     }, []);
 
     const handleApprove = useCallback(async (scale: ServiceExchange) => {
-        setLoading(true);
         try {
             const { error: trocaError } = await supabase
                 .from("troca_servicos")
@@ -376,15 +374,12 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
                 )
             );
 
-            setLoading(false);
         } catch (error) {
             console.error("Erro desconhecido ao aprovar a troca:", error);
-            setLoading(false);
         }
     }, []);
 
     const handleReject = useCallback(async (scale: ServiceExchange) => {
-        setLoading(true);
         try {
             const { error } = await supabase
                 .from("troca_servicos")
@@ -403,10 +398,8 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
                 )
             );
 
-            setLoading(false);
         } catch (error) {
             console.error("Erro desconhecido ao rejeitar a troca:", error);
-            setLoading(false);
         }
     }, []);
 

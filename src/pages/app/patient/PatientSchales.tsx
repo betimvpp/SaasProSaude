@@ -65,14 +65,10 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                     return null;
                 }
 
-                const formattedDate = scale.data
-                    ? new Date(scale.data).toLocaleDateString("pt-BR")
-                    : undefined;
-
+               
                 return {
                     ...scale,
                     nomeFuncionario: collaboratorData?.nome,
-                    data: formattedDate!,
                 };
             });
 

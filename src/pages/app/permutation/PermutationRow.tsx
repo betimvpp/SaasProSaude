@@ -1,22 +1,47 @@
 import { Button } from '@/components/ui/button'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { ServiceExchange, useScale } from '@/contexts/scaleContext'
+import { useState } from 'react'
 
 export const PermutationRow = ({ scale }: { scale: ServiceExchange }) => {
     const { handleApprove, handleReject } = useScale()
-
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR');
-    }
+    const [approvingLoading, setApprovingLoading] = useState(false);
+    const [localScale, setLocalScale] = useState(scale)
 
     const onApprove = async () => {
-        handleApprove(scale);
-    };
+        setApprovingLoading(true)
+        try {
+            await handleApprove(localScale) // Aprovar a permuta
+            // Atualize o estado local após a aprovação
+            setLocalScale((prevState) => ({
+                ...prevState,
+                status_func_destino: 'Aprovado',  // Atualize o status para 'Aprovado'
+                status_gestor: 'Aprovado', // Caso necessário, também atualize o status do gestor
+            }))
+        } catch (error) {
+            console.error('Erro ao aprovar permuta:', error)
+        } finally {
+            setApprovingLoading(false) // Desabilitar o loading
+        }
+    }
 
     const onReject = async () => {
-        handleReject(scale);
+        setApprovingLoading(true)
+        try {
+            await handleReject(localScale) // Rejeitar a permuta
+            // Atualize o estado local após a rejeição
+            setLocalScale((prevState) => ({
+                ...prevState,
+                status_func_destino: 'Rejeitado',
+                status_gestor: 'Rejeitado',
+            }))
+        } catch (error) {
+            console.error('Erro ao reprovar permuta:', error)
+        } finally {
+            setApprovingLoading(false) // Desabilitar o loading
+        }
     }
+
     return (
         <TableRow>
             <TableCell className="text-center">
@@ -32,11 +57,11 @@ export const PermutationRow = ({ scale }: { scale: ServiceExchange }) => {
             </TableCell>
 
             <TableCell className="text-center">
-                {scale?.data_servico_colaborador_origem ? formatDate(scale.data_servico_colaborador_origem) : 'N/A'}
+                {scale?.data_servico_colaborador_origem ? scale.data_servico_colaborador_origem : 'N/A'}
             </TableCell>
 
             <TableCell className="text-center">
-                {scale?.data_servico_destino ? formatDate(scale.data_servico_destino) : 'N/A'}
+                {scale?.data_servico_destino ? scale.data_servico_destino : 'N/A'}
             </TableCell>
 
             <TableCell className="text-center">
@@ -48,39 +73,51 @@ export const PermutationRow = ({ scale }: { scale: ServiceExchange }) => {
             </TableCell>
 
             <TableCell className="flex items-center justify-center gap-2">
-                {scale?.status_func_destino === 'Pendente' && (
+                {localScale?.status_func_destino === 'Pendente' && (
                     <Button size='xs' disabled variant='link'>
                         Pendente
                     </Button>
                 )}
 
-                {scale?.status_func_destino === 'Aprovado' && scale?.status_gestor === 'Aprovado' && (
+                {localScale?.status_func_destino === 'Aprovado' && localScale?.status_gestor === 'Aprovado' && (
                     <Button size='xs' disabled variant='outline' className='border-primary text-primary'>
                         Aprovado
                     </Button>
                 )}
 
                 {/* Status: Aprovado (gestor pendente) */}
-                {scale?.status_func_destino === 'Aprovado' && scale?.status_gestor === 'Pendente' && (
+                {localScale?.status_func_destino === 'Aprovado' && localScale?.status_gestor === 'Pendente' && (
                     <>
-                        <Button size='xs' onClick={onApprove}>
-                            Aprovar
-                        </Button>
-                        <Button size='xs' onClick={onReject} variant='destructive'>
-                            X
-                        </Button>
+                        {approvingLoading ? (
+                            <Button size='xs' disabled>
+                                Aprovando
+                            </Button>
+                        ) : (
+                            <Button size='xs' onClick={onApprove}>
+                                Aprovar
+                            </Button>
+                        )}
+                        {approvingLoading ? (
+                            <Button size='xs' disabled variant='destructive'>
+                                Reprovando
+                            </Button>
+                        ) : (
+                            <Button size='xs' onClick={onReject} variant='destructive'>
+                                Reprovar
+                            </Button>
+                        )}
                     </>
                 )}
 
                 {/* Status: Aprovado (gestor rejeitado) */}
-                {scale?.status_func_destino === 'Aprovado' && scale?.status_gestor === 'Rejeitado' && (
+                {localScale?.status_func_destino === 'Aprovado' && localScale?.status_gestor === 'Rejeitado' && (
                     <Button size='xs' disabled variant='outline' className='border-destructive text-destructive'>
                         Rejeitado
                     </Button>
                 )}
 
-                {/* Status: Rejeitado (funcionario ou gestor) - Aparece uma vez */}
-                {(scale?.status_func_destino === 'Rejeitado' || scale?.status_gestor === 'Rejeitado') && scale?.status_func_destino !== 'Aprovado' && scale?.status_gestor !== 'Aprovado' && (
+                {/* Status: Rejeitado (funcionario ou gestor) */}
+                {(localScale?.status_func_destino === 'Rejeitado' || localScale?.status_gestor === 'Rejeitado') && localScale?.status_func_destino !== 'Aprovado' && localScale?.status_gestor !== 'Aprovado' && (
                     <Button size='xs' disabled variant='outline' className='border-destructive text-destructive'>
                         Rejeitado
                     </Button>
