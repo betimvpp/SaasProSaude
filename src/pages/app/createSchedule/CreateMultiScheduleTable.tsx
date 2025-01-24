@@ -17,7 +17,7 @@ import supabase from '@/lib/supabase'
 
 export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const { patients, fetchPatients } = usePatients();
-    const { collaborators, fetchCollaborator } = useCollaborator();
+    const { collaboratorsNotPaginated, fetchCollaboratorNotPaginated } = useCollaborator();
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([]);
     const [searchValue, setSearchValue] = useState('');
     const [collaboratorSearchValue, setCollaboratorSearchValue] = useState('');
@@ -55,7 +55,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                 setValue('valor_pago', selectedPatientData.pagamento_a_profissional!);
 
                 // Filtra colaboradores pela cidade
-                let filteredCollaborators = collaborators.filter(
+                let filteredCollaborators = collaboratorsNotPaginated.filter(
                     collaborator => collaborator.cidade === selectedPatientData.cidade
                 );
 
@@ -174,7 +174,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const handleComplete = () => {
         try {
             if (selectedCollaboratorId) {
-                const selectedCollaborator = collaborators.find(c => c.funcionario_id === selectedCollaboratorId);
+                const selectedCollaborator = collaboratorsNotPaginated.find(c => c.funcionario_id === selectedCollaboratorId);
                 if (selectedCollaborator) {
                     const newCollaborator = {
                         ...selectedCollaborator,
@@ -234,11 +234,11 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     useEffect(() => {
         const timeoutId = setTimeout(() => {
             fetchPatients({ patientName: searchValue });
-            fetchCollaborator({ collaboratorName: collaboratorSearchValue });
+            fetchCollaboratorNotPaginated({ collaboratorName: collaboratorSearchValue });
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaborator]);
+    }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
 
     return (
         <form className='h-full'>

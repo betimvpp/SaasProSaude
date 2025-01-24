@@ -14,6 +14,7 @@ interface HabilityContextType {
     loading: boolean;
     fetchHabilitys: () => Promise<void>;
     fetchPatientHabilities: (patientId: string) => Promise<number[]>;
+    fetchCollaboratorHabilities: (collaboratorId: string) => Promise<number[]>;
     addSpecialty: (name: string) => Promise<void>;
 }
 
@@ -63,6 +64,20 @@ export const HabilityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return data.map(item => item.especialidade_id);
     }, []);
 
+    const fetchCollaboratorHabilities = useCallback(async (collaboratorId: string) => {
+        const { data, error } = await supabase
+            .from('funcionario_especialidade')
+            .select('*')
+            .eq('funcionario_id', collaboratorId);
+
+        if (error) {
+            console.error('Erro ao buscar especialidades do paciente:', error);
+            return [];
+        }
+
+        return data.map(item => item.especialidade_id);
+    }, []);
+
     const addSpecialty = useCallback(async (name: string) => {
         const { data: existingSpecialty, error: fetchError } = await supabase
             .from('especialidade')
@@ -98,7 +113,7 @@ export const HabilityProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }, [fetchHabilitys]);
 
     return (
-        <HabilityContext.Provider value={{ habilities, loading, fetchHabilitys, fetchPatientHabilities, addSpecialty }}>
+        <HabilityContext.Provider value={{ habilities, loading, fetchHabilitys, fetchPatientHabilities, addSpecialty, fetchCollaboratorHabilities }}>
             {children}
         </HabilityContext.Provider>
     );
