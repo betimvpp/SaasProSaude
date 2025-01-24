@@ -3,7 +3,7 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 import { TableCell, TableRow } from '@/components/ui/table'
 import { PaymentInfo } from '@/contexts/paymentContext'
 import { Search } from 'lucide-react';
-import { PaymentDetails } from './PaymentDetails';
+// import { PaymentDetails } from './PaymentDetails';
 import { useState } from 'react';
 
 export const PaymentRow = ({ payment, isAdmin, loading }: { payment: PaymentInfo; isAdmin: string; loading: boolean; }) => {
@@ -19,7 +19,7 @@ export const PaymentRow = ({ payment, isAdmin, loading }: { payment: PaymentInfo
                             <span className="sr-only">Detalhes do RH</span>
                         </Button>
                     </DialogTrigger>
-                    <PaymentDetails open={isDetailsOpen} payment={payment} isAdmin={isAdmin} loading={loading} />
+                    {/* <PaymentDetails open={isDetailsOpen} payment={payment} isAdmin={isAdmin} loading={loading} /> */}
                 </Dialog>
             </TableCell>
             <TableCell className="text-center">{payment.nome}</TableCell>
