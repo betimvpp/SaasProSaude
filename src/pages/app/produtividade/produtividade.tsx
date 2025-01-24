@@ -1,7 +1,8 @@
 import { useProdutividade } from "@/contexts/produtividadeContex";
-import { ProdutividadeTable } from "./produtividadeTable"
+
 import { useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination";
+import { ProdutividadeTable } from "./ProdutividadeTable";
 
 export const Produtividade = () => { 
     const { PacinteEscalaScalesData, loading, fetchProdutividade, totalCount} = useProdutividade();
