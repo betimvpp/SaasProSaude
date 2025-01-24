@@ -141,7 +141,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
 
             setPaymentData(paginatedPayments);
             setPaymentDataNotPaginated(allPayments);
-            setTotalCount(allPayments.length); 
+            setTotalCount(allPayments.length);
         } catch (error) {
             console.error("Erro ao buscar pagamentos:", error);
             setPaymentData([]);
@@ -149,7 +149,6 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
             setLoading(false);
         }
     }, []);
-
 
     const fetchCollaboratorScales = useCallback(
         async (funcionario_id: string = '', month: string = '', pageIndex: number = 0) => {
@@ -226,6 +225,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
         },
         []
     );
+
 
     return (
         <PaymentContext.Provider value={{ fetchPayments, loading, paymentData, paymentDataNotPaginated, totalCount, collaboratorScalesData, fetchCollaboratorScales, totalScalesCount }}>
