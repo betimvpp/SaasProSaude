@@ -17,6 +17,8 @@ import { Documents } from '@/pages/app/documents/Documents'
 import { RecoverPassword } from '@/pages/login/RecoverPassword'
 import { ResetPassword } from '@/pages/login/ResetPassword'
 import NotificationForm from '@/pages/app/notifications/NotificationForm'
+import { Produtividade } from '@/pages/app/produtividade/produtividade'
+
 
 export const router = createBrowserRouter([
   {
@@ -90,6 +92,12 @@ export const router = createBrowserRouter([
         path: '/mensagens', element:
           <ProtectedRoute allowedRoles={['admin']}>
             <NotificationForm />
+          </ProtectedRoute>
+      },
+      {
+        path: '/produtividade', element:
+          <ProtectedRoute allowedRoles={['admin', 'rh']}>
+            <Produtividade />
           </ProtectedRoute>
       },
     ],
