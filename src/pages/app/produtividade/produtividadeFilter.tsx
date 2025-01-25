@@ -1,70 +1,123 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ProdutividadeFilter, produtividadeFilterSchema, useProdutividade } from "@/contexts/produtividadeContex"
+import { zodResolver } from "@hookform/resolvers/zod"
 import { Search, X } from "lucide-react"
-import { Controller } from "react-hook-form"
+import { Controller, useForm } from "react-hook-form"
 
-export const ProdutividadeFilter =() =>{
+interface ProdutividadFilterProps {
+    setSelectedCidade: (cidade: string) => void;
+    setSelectedMonth: (month: string) => void;
+}
+
+
+export const ProdutividadeFiltert = ({ setSelectedCidade, setSelectedMonth }: ProdutividadFilterProps) => {
+    const { fetchProdutividade, cidadesData } = useProdutividade();
+
+    const { register, handleSubmit, control, reset } = useForm<ProdutividadeFilter>({
+        resolver: zodResolver(produtividadeFilterSchema),
+        defaultValues: {
+            pacienteName: '',
+            contratante: '',
+            cidade: '',
+            month: new Date().toISOString().slice(0, 7),
+        },
+    });
+
+    async function handleFilter(data: ProdutividadeFilter) {
+        await fetchProdutividade(data);
+        setSelectedMonth(data.month!);
+        setSelectedCidade(data.cidade!);
+    }
+
+    function handleClearFilters() {
+        const defaultFilters = {
+            pacienteName: '',
+            contratante: '',
+            cidade: "",
+            month: new Date().toISOString().slice(0, 7),
+        };
+
+        reset(defaultFilters);
+        fetchProdutividade(defaultFilters);
+    }
+
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentYear = parseInt(currentMonth.split("-")[0], 10);
 
 
     return (
         <div className='flex justify-between'>
             <form
-                //onSubmit={handleSubmit(handleFilter)}
+                onSubmit={handleSubmit(handleFilter)}
                 className="flex items-center gap-2"
             >
                 <span className="text-sm font-semibold">Filtros:</span>
                 <Input
-                    placeholder="Nome do colaborador"
-                    className="h-8 w-[17rem]"
-                  //  {...register('collaboratorName')}
+                    placeholder="Nome do Contratante"
+                    className="h-8 w-[12rem]"
+                    {...register('contratante')}
                 />
-                <span className="text-sm font-semibold">Ordenar por data:</span>
+                   <Input
+                    placeholder="Nome do Paciente"
+                    className="h-8 w-[12rem]"
+                    {...register('pacienteName')}
+                />
+                <span className="text-sm font-semibold">Ordenar por:</span>
                 <Controller
                     name="month"
-                  //  control={control}
+                    control={control}
                     render={({ field: { name, onChange, value, disabled } }) => (
                         <Select
                             name={name}
                             onValueChange={onChange}
-                           // defaultValue={currentMonth}
+                            defaultValue={currentMonth}
                             value={value}
                             disabled={disabled}
                         >
                             <SelectTrigger className="h-8 w-[180px]">
-                                <SelectValue placeholder="Ordenar" />
+                                <SelectValue placeholder="Ordenar Por Mes" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem className="cursor-pointer" value={""}>Janeiro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-01`}>Janeiro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-02`}>Fevereiro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-03`}>Março</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-04`}>Abril</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-05`}>Maio</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-06`}>Junho</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-07`}>Julho</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-08`}>Agosto</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-09`}>Setembro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-10`}>Outubro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-11`}>Novembro</SelectItem>
+                                <SelectItem className="cursor-pointer" value={`${currentYear}-12`}>Dezembro</SelectItem>
 
                             </SelectContent>
                         </Select>
                     )}
                 ></Controller>
                 <Controller
-                    name="role"
-                    //control={control}
+                    name="cidade"
+                    control={control}
                     render={({ field: { name, onChange, value, disabled } }) => {
                         return (
                             <Select
-                                defaultValue="all"
+                                defaultValue=""
                                 name={name}
                                 onValueChange={onChange}
                                 value={value}
                                 disabled={disabled}
                             >
                                 <SelectTrigger className="h-8 w-[180px]">
-                                    <SelectValue />
+                                    <SelectValue  placeholder="Ordenar Por Cidade"/>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem className="cursor-pointer" value="all">Todos cargos</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="nutricionista">Nutricionista</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="fisioterapeuta">Fisioterapeuta</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="enfermeiro">Enfermeiro</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="técnico de enfermagem">Técnico de Enfermagem</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="fonoaudiólogo">Fonoaudiólogo</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="psicólogo">Psicólogo</SelectItem>
-                                    <SelectItem className="cursor-pointer" value="dentista">Dentista</SelectItem>
+                                    {cidadesData && cidadesData.map((cidade) => (
+                                        <SelectItem key={cidade.id} value={cidade.cidade}>
+                                            {cidade.cidade}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         )
@@ -75,7 +128,7 @@ export const ProdutividadeFilter =() =>{
                     Filtrar resultados
                 </Button>
                 <Button
-                   // onClick={handleClearFilters}
+                    onClick={handleClearFilters}
                     variant="outline"
                     size="xs"
                     type="button"

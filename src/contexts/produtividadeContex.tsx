@@ -1,12 +1,18 @@
 import supabase from "@/lib/supabase";
+import { set } from "date-fns";
 import { useContext, createContext, ReactNode, useState, useCallback } from "react";
 import { z } from "zod";
 
+export const cidadeDeAtuacaoSchmea = z.object({
+    id: z.number(),
+    cidade: z.string(),
+});
+
 export const ProdutividadeSchema = z.object({
     paciente_id: z.string().uuid("ID do paciente deve ser um UUID válido"),
-    nome_paciente: z.string().min(1, "O nome do paciente é obrigatório"), // Nome do paciente
-    cidade: z.string().min(1, "A cidade é obrigatória"), // Cidade
-    plano_saude: z.string().min(1, "O contratante é obrigatório"), // Contratante
+    nome_paciente: z.string().min(1, "O nome do paciente é obrigatório"),
+    cidade: z.string().min(1, "A cidade é obrigatória"),
+    plano_saude: z.string().min(1, "O contratante é obrigatório"), 
     M: z.number().nonnegative().default(0),
     T: z.number().nonnegative().default(0),
     SD: z.number().nonnegative().default(0),
@@ -16,6 +22,8 @@ export const ProdutividadeSchema = z.object({
 });
 
 export type produtividadeInfor = z.infer<typeof ProdutividadeSchema>;
+
+export type cidadedeAtuacaoInfor = z.infer<typeof cidadeDeAtuacaoSchmea>;
 
 export const produtividadeFilterSchema = z.object({
     pacienteName: z.string().optional(),
@@ -28,30 +36,30 @@ export type ProdutividadeFilter = z.infer<typeof produtividadeFilterSchema>;
 
 const produtividadeeContext = createContext<{
     fetchProdutividade: (filter?: ProdutividadeFilter, pageIndex?: number) => Promise<void>;
-    fetchPacientesScales: (Paciente_id: string, month: string, pageIndex?: number) => Promise<void>;
-    PacinteEscalaScalesData: produtividadeInfor[];
+    fetachCidades: (id: number, cidade: string) => Promise<void>;
     produtividadeData: produtividadeInfor[];
     paymentDataNotPaginated: produtividadeInfor[];
     loading: boolean;
     totalCount: number,
+    cidadesData: cidadedeAtuacaoInfor[];
 
 }>({
     fetchProdutividade: async () => { },
-    fetchPacientesScales: async () => { },
-    PacinteEscalaScalesData: [],
+    fetachCidades: async () => { },
     produtividadeData: [],
     paymentDataNotPaginated: [],
     loading: false,
     totalCount: 0,
+    cidadesData: [],
 
 });
 
 export const useProdutividade = () => useContext(produtividadeeContext);
 
 export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => {
-    const [PacinteEscalaScalesData, setPacinteEscalaScalesData] = useState<produtividadeInfor[]>([]);
     const [produtividadeData, setprodutividadeDataData] = useState<produtividadeInfor[]>([]);
     const [paymentDataNotPaginated, setPaymentDataNotPaginated] = useState<produtividadeInfor[]>([]);
+    const [cidadesData, setCidadesData] = useState<cidadedeAtuacaoInfor[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [totalCount, setTotalCount] = useState<number>(0);
 
@@ -68,14 +76,29 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
             const monthNumber = parseInt(currentMonth.split("-")[1], 10);
             const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
 
+            const {data: allCitys, error: citysError} = await supabase.from("cidade_de_atuacao").select("*");
+            if (citysError) throw citysError;
+            const allCidades = allCitys.map((cidade) => {
+                return {
+                    id: cidade.id,
+                    cidade: cidade.cidade,
+                };
+                
+            });
+            setCidadesData(allCidades);
+
+
             // Query inicial com filtro de pacientes
-            let baseSupaBaseQuery = supabase
+            let baseSupaBaseQueryByName = supabase
                 .from("paciente")
                 .select("*")
-                .ilike("nome", `%${pacienteName || ""}%`);
+                .ilike("cidade", `%${cidade || ""}%`)
+                .ilike("nome", `%${pacienteName || ""}%`)
+                .ilike("plano_saude", `%${contratante || ""}%`);
 
-            const { data: allPacientes, error: fullError } = await baseSupaBaseQuery;
+            const { data: allPacientes, error: fullError } = await baseSupaBaseQueryByName;
             if (fullError) throw fullError;
+
 
             // Filtrar escalas pelo mês
             const { data: allScales, error: scalesError } = await supabase
@@ -85,37 +108,35 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
                 .lte("data", `${currentMonth}-${lastDayOfMonth}`);
 
             if (scalesError) throw scalesError;
+            console.log(allScales);
 
             // Mapeando produtividade
-            console.log("allCollaborators", allPacientes);
             const allprodutividade = allPacientes.map((paciente) => {
                 const pacienteEscala = allScales.filter((escala) => escala.paciente_id === paciente.paciente_id);
-                const totaldeServicoM = pacienteEscala.reduce((acc, scale) => acc + (scale.tipo_servico !== "M" ? (scale.valor_recebido || 0) : 0),0);
-
-                const totals = pacienteEscala.reduce(
-                    (acc, scale) => {
-                        if (scale.tipo_servico === "M") acc.M += scale.valor_recebido || 0;
-                        if (scale.tipo_servico === "T") acc.T += scale.valor_recebido || 0;
-                        if (scale.tipo_servico === "SD") acc.SD += scale.valor_recebido || 0;
-                        if (scale.tipo_servico === "SN") acc.SN += scale.valor_recebido || 0;
-                        if (scale.tipo_servico === "P") acc.P += scale.valor_recebido || 0;
-                        if (scale.tipo_servico === "GR") acc.G += scale.valor_recebido || 0;
-                        return acc;
-                    },
-                    { M: 0, T: 0, SD: 0, SN: 0, P: 0, G: 0 }
-                );
+                const totaldeServicoM = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "M" ? 1 : 0), 0);
+                const totaldeServicoT = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "T" ? 1 : 0), 0);
+                const totaldeServicoSD = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "SD" ? 1 : 0), 0);
+                const totaldeServicoSN = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "SN" ? 1 : 0), 0);
+                const totaldeServicoP = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "P" ? 1 : 0), 0);
+                const totaldeServicoGR = pacienteEscala.reduce(
+                    (acc, scale) => acc + (scale.tipo_servico === "GR" ? 1 : 0), 0);
 
                 return {
-                    paciente_id: paciente.id,
+                    paciente_id: paciente.paciente_id,
                     nome_paciente: paciente.nome,
                     cidade: paciente.cidade || "",
-                    plano_saude: paciente.contratante || "",
+                    plano_saude: paciente.plano_saude || "",
                     M: totaldeServicoM,
-                    T: totals.T,
-                    SD: totals.SD,
-                    SN: totals.SN,
-                    P: totals.P,
-                    G: totals.G,
+                    T: totaldeServicoT,
+                    SD: totaldeServicoSD,
+                    SN: totaldeServicoSN,
+                    P: totaldeServicoP,
+                    G: totaldeServicoGR,
                 };
             });
 
@@ -136,10 +157,12 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
         }
     }, []);
 
-    const fetchPacientesScales = useCallback(async (Paciente_id: string, month: string, pageIndex: number = 0) => { }, []);
+    const fetachCidades = useCallback(async () => {
+        
+     }, []);
 
     return (
-        <produtividadeeContext.Provider value={{ fetchProdutividade, fetchPacientesScales, PacinteEscalaScalesData, produtividadeData, paymentDataNotPaginated, loading, totalCount }}>
+        <produtividadeeContext.Provider value={{ fetchProdutividade, fetachCidades, produtividadeData, paymentDataNotPaginated, loading, totalCount, cidadesData }}>
             {children}
         </produtividadeeContext.Provider>
     );

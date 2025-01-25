@@ -1,12 +1,7 @@
 import { TableCell, TableRow } from "@/components/ui/table";
 import { produtividadeInfor } from "@/contexts/produtividadeContex";
 
-
-
-
 export const ProdutividadeRow = ({ produtividade }: { produtividade: produtividadeInfor }) => {
-
-
     return (
         <TableRow key={produtividade.paciente_id}>
              <TableCell className="text-center">{}</TableCell>
