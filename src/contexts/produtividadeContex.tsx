@@ -1,5 +1,6 @@
 import supabase from "@/lib/supabase";
 import { set } from "date-fns";
+
 import { useContext, createContext, ReactNode, useState, useCallback } from "react";
 import { z } from "zod";
 
@@ -12,7 +13,9 @@ export const ProdutividadeSchema = z.object({
     paciente_id: z.string().uuid("ID do paciente deve ser um UUID válido"),
     nome_paciente: z.string().min(1, "O nome do paciente é obrigatório"),
     cidade: z.string().min(1, "A cidade é obrigatória"),
-    plano_saude: z.string().min(1, "O contratante é obrigatório"), 
+    plano_saude: z.string().min(1, "O contratante é obrigatório"),
+    mes: z.string().optional(),
+    tipodeServico: z.string().optional(),
     M: z.number().nonnegative().default(0),
     T: z.number().nonnegative().default(0),
     SD: z.number().nonnegative().default(0),
@@ -21,6 +24,23 @@ export const ProdutividadeSchema = z.object({
     G: z.number().nonnegative().default(0),
 });
 
+export const EscalaSchema = z.object({
+    escala_id: z.number().int('ID da escala deve ser um número inteiro'),
+    paciente_id: z.string().uuid('ID do paciente deve ser um UUID válido'),
+    funcionario_id: z.string().uuid('ID do funcionário deve ser um UUID válido'),
+    data: z.string().date('Data deve ser uma data válida'),
+    tipo_servico: z.string().min(1, 'Tipo de serviço é obrigatório'),
+    valor_recebido: z.number().nonnegative('Valor recebido deve ser um número não negativo'),
+    valor_pago: z.number(),
+    pagamentoAR_AV: z.string(),
+    horario_gerenciamento: z.string().nullable(),
+    funcionario: z.object({
+        nome: z.string(),
+        role: z.string()
+    }),
+});
+
+export type EscalaInfor = z.infer<typeof EscalaSchema>;
 export type produtividadeInfor = z.infer<typeof ProdutividadeSchema>;
 
 export type cidadedeAtuacaoInfor = z.infer<typeof cidadeDeAtuacaoSchmea>;
@@ -36,21 +56,27 @@ export type ProdutividadeFilter = z.infer<typeof produtividadeFilterSchema>;
 
 const produtividadeeContext = createContext<{
     fetchProdutividade: (filter?: ProdutividadeFilter, pageIndex?: number) => Promise<void>;
-    fetachCidades: (id: number, cidade: string) => Promise<void>;
+    fetachEscapaByPacienteId: (paciente_id: string, month: string, pageIndex?: number) => Promise<void>;
     produtividadeData: produtividadeInfor[];
+    protutividadeByPacienteID: EscalaInfor[];
     paymentDataNotPaginated: produtividadeInfor[];
+    ProdutividadePacienteDataNotPaginated: EscalaInfor[];
     loading: boolean;
     totalCount: number,
     cidadesData: cidadedeAtuacaoInfor[];
+    pacienteTotalCont: number;
 
 }>({
     fetchProdutividade: async () => { },
-    fetachCidades: async () => { },
+    fetachEscapaByPacienteId: async () => { },
     produtividadeData: [],
+    protutividadeByPacienteID: [],
     paymentDataNotPaginated: [],
+    ProdutividadePacienteDataNotPaginated: [],
     loading: false,
     totalCount: 0,
     cidadesData: [],
+    pacienteTotalCont: 0,
 
 });
 
@@ -58,9 +84,12 @@ export const useProdutividade = () => useContext(produtividadeeContext);
 
 export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => {
     const [produtividadeData, setprodutividadeDataData] = useState<produtividadeInfor[]>([]);
+    const [protutividadeByPacienteID, setProtutividadeByPacienteID] = useState<EscalaInfor[]>([]);
     const [paymentDataNotPaginated, setPaymentDataNotPaginated] = useState<produtividadeInfor[]>([]);
+    const [ProdutividadePacienteDataNotPaginated, setProdutividadePacienteDataNotPaginated] = useState<EscalaInfor[]>([]);
     const [cidadesData, setCidadesData] = useState<cidadedeAtuacaoInfor[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
+    const [pacienteTotalCont, setPacienteTotalCont] = useState<number>(0);
     const [totalCount, setTotalCount] = useState<number>(0);
 
     const fetchProdutividade = useCallback(async (filters: ProdutividadeFilter = {}, pageIndex: number = 0) => {
@@ -76,14 +105,14 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
             const monthNumber = parseInt(currentMonth.split("-")[1], 10);
             const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
 
-            const {data: allCitys, error: citysError} = await supabase.from("cidade_de_atuacao").select("*");
+            const { data: allCitys, error: citysError } = await supabase.from("cidade_de_atuacao").select("*");
             if (citysError) throw citysError;
             const allCidades = allCitys.map((cidade) => {
                 return {
                     id: cidade.id,
                     cidade: cidade.cidade,
                 };
-                
+
             });
             setCidadesData(allCidades);
 
@@ -108,7 +137,6 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
                 .lte("data", `${currentMonth}-${lastDayOfMonth}`);
 
             if (scalesError) throw scalesError;
-            console.log(allScales);
 
             // Mapeando produtividade
             const allprodutividade = allPacientes.map((paciente) => {
@@ -139,8 +167,6 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
                     G: totaldeServicoGR,
                 };
             });
-
-            console.log("toda a produtividade", allprodutividade);
             // Paginação
             const paginatedPayments = allprodutividade.slice(offset, offset + perPage);
 
@@ -157,12 +183,77 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
         }
     }, []);
 
-    const fetachCidades = useCallback(async () => {
-        
-     }, []);
+    const fetachEscapaByPacienteId = useCallback(async (paciente_id: string = '', month: string = '', pageIndex: number = 0) => {
+        try {
+            setLoading(true);
+            const perPage = 10;
+            const offset = pageIndex * perPage;
+            const year = parseInt(month.split("-")[0], 10);
+            const monthNumber = parseInt(month.split("-")[1], 10);
+            const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
+
+            const { count: totalScalesCount, error: totalError } = await supabase
+                .from("escala")
+                .select("*", { count: "exact", head: true })
+                .eq("paciente_id", paciente_id)
+                .gte("data", `${month}-01`)
+                .lte("data", `${month}-${lastDayOfMonth}`);
+
+            if (totalError) {
+                console.error("Erro ao buscar contagem de escalas pacinte:", totalError);
+                return;
+            }
+
+            const { data: allScales, error: scalesError } = await supabase
+                .from("escala")
+                .select('*,funcionario:funcionario_id (nome, role)')
+                .eq("paciente_id", paciente_id)
+                .gte("data", `${month}-01`)
+                .lte("data", `${month}-${lastDayOfMonth}`)
+
+
+
+            if (scalesError) {
+                console.error("Erro ao buscar escalas:", scalesError);
+                setProtutividadeByPacienteID([]);
+                return;
+            }
+
+            const allprodutividade = allScales.map((escala) => {
+                return {
+                    escala_id: escala.escala_id,
+                    paciente_id: escala.paciente_id,
+                    funcionario_id: escala.funcionario_id,
+                    data: escala.data,
+                    tipo_servico: escala.tipo_servico,
+                    valor_recebido: escala.valor_recebido,
+                    valor_pago: escala.valor_pago,
+                    pagamentoAR_AV: escala.pagamentoAR_AV,
+                    horario_gerenciamento: escala.horario_gerenciamento,
+                    funcionario: {
+                        nome: escala.funcionario.nome,
+                        role: escala.funcionario.role
+                    }
+                }
+            });
+
+            const paginatedPayments = allprodutividade.slice(offset, offset + perPage);
+
+
+            setProtutividadeByPacienteID(paginatedPayments);
+            setPacienteTotalCont(totalScalesCount ?? 0);
+            setProdutividadePacienteDataNotPaginated(allScales);
+        } catch (error) {
+            console.error("Erro ao buscar escalas do pacinte:", error);
+            setProtutividadeByPacienteID([]);
+            setProdutividadePacienteDataNotPaginated([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
 
     return (
-        <produtividadeeContext.Provider value={{ fetchProdutividade, fetachCidades, produtividadeData, paymentDataNotPaginated, loading, totalCount, cidadesData }}>
+        <produtividadeeContext.Provider value={{ fetchProdutividade, fetachEscapaByPacienteId, produtividadeData, protutividadeByPacienteID, paymentDataNotPaginated, loading, totalCount, cidadesData, pacienteTotalCont, ProdutividadePacienteDataNotPaginated }}>
             {children}
         </produtividadeeContext.Provider>
     );

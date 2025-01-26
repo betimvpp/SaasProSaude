@@ -84,7 +84,7 @@ export const ProdutividadeTable = ({ selectedMonth }: PaymentTableProps) => {
             </TableHeader>
             <TableBody>
                 {produtividadeData && produtividadeData.map((produtividade) => (
-                    <ProdutividadeRow produtividade={produtividade} />
+                    <ProdutividadeRow key={produtividade.paciente_id} produtividade={produtividade} moth={currentMonth}  />
                 ))}
             </TableBody>
             {loading === true && produtividadeData.length <= 0 && <TableSkeleton />}
