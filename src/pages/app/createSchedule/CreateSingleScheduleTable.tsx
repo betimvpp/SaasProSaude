@@ -26,6 +26,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([])
     const [applyNeighborhoodFilter, setApplyNeighborhoodFilter] = useState(false);
+    const [selectedPatientId, setSelectedPatientId] = useState('');
 
     const { register, setValue, watch, } = useForm<Scale>({});
 
@@ -43,50 +44,8 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         },
     });
 
-    const handlePatientSelection = async (patientId: string) => {
-        try {
-            const selectedPatientData = patients.find((patient) => patient.paciente_id === patientId);
-            if (!selectedPatientData) return;
-
-            let filtered = collaboratorsNotPaginated.filter(
-                (collaborator) => collaborator.cidade === selectedPatientData.cidade
-            );
-
-            const { data: patientSpecialties, error: specialtiesError } = await supabase
-                .from("paciente_especialidades")
-                .select("especialidade_id")
-                .eq("paciente_id", patientId);
-
-            if (specialtiesError) {
-                console.error("Erro ao buscar especialidades do paciente:", specialtiesError);
-                toast.error("Erro ao buscar especialidades do paciente.");
-                setFilteredCollaborators(filtered);
-                return;
-            }
-
-            if (patientSpecialties && patientSpecialties.length > 0) {
-                const specialtyIds = patientSpecialties.map((s) => String(s.especialidade_id).trim());
-
-                const { data: matchingCollaborators, error: collaboratorsError } = await supabase
-                    .from("funcionario_especialidade")
-                    .select("funcionario_id")
-                    .in("especialidade_id", specialtyIds);
-
-                if (!collaboratorsError && matchingCollaborators) {
-                    const matchingIds = matchingCollaborators.map((c) => String(c.funcionario_id).trim());
-
-                    filtered = filtered.filter((collaborator) =>
-                        matchingIds.includes(String(collaborator.funcionario_id).trim())
-                    );
-                }
-            }
-
-            setFilteredCollaborators(filtered);
-
-        } catch (error) {
-            console.error("Erro ao processar seleção do paciente:", error);
-            toast.error("Erro inesperado ao processar seleção do paciente.");
-        }
+    const handlePatientSelection = (patientId: string) => {
+        setSelectedPatientId(patientId);
     };
 
     const fetchAvailableCollaborators = async (date: Date) => {
@@ -193,7 +152,6 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         const timeoutId = setTimeout(() => {
             fetchPatients({ patientName: searchValue });
             fetchCollaboratorNotPaginated({ collaboratorName: collaboratorSearchValue });
-            console.log("Colaboradores carregados:", collaboratorsNotPaginated);
         }, 500);
 
         return () => clearTimeout(timeoutId);
@@ -204,6 +162,75 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
             fetchAvailableCollaborators(selectedData);
         }
     }, [selectedData]);
+
+    useEffect(() => {
+        const applyFilters = async () => {
+            if (!selectedPatientId) return; // Certifique-se de que um paciente está selecionado
+
+            const selectedPatientData = patients.find((patient) => patient.paciente_id === selectedPatientId);
+            if (!selectedPatientData) return;
+
+            let filtered = collaboratorsNotPaginated.filter(
+                (collaborator) => collaborator.cidade === selectedPatientData.cidade
+            );
+
+            // Filtro por bairro
+            if (applyNeighborhoodFilter) {
+                const { data: matchingBairros, error: bairroError } = await supabase
+                    .from("funcionario_bairro")
+                    .select("funcionario_id")
+                    .eq("bairro", selectedPatientData.bairro);
+
+                if (bairroError) {
+                    console.error("Erro ao buscar funcionários pelo bairro:", bairroError);
+                    toast.error("Erro ao buscar funcionários pelo bairro.");
+                    setFilteredCollaborators(filtered);
+                    return;
+                }
+
+                if (matchingBairros) {
+                    const matchingIds = matchingBairros.map((item) => String(item.funcionario_id).trim());
+                    filtered = filtered.filter((collaborator) =>
+                        matchingIds.includes(String(collaborator.funcionario_id).trim())
+                    );
+                }
+            }
+
+            // Filtro por especialidades
+            const { data: patientSpecialties, error: specialtiesError } = await supabase
+                .from("paciente_especialidades")
+                .select("especialidade_id")
+                .eq("paciente_id", selectedPatientId);
+
+            if (specialtiesError) {
+                console.error("Erro ao buscar especialidades do paciente:", specialtiesError);
+                toast.error("Erro ao buscar especialidades do paciente.");
+                setFilteredCollaborators(filtered);
+                return;
+            }
+
+            if (patientSpecialties && patientSpecialties.length > 0) {
+                const specialtyIds = patientSpecialties.map((s) => String(s.especialidade_id).trim());
+
+                const { data: matchingCollaborators, error: collaboratorsError } = await supabase
+                    .from("funcionario_especialidade")
+                    .select("funcionario_id")
+                    .in("especialidade_id", specialtyIds);
+
+                if (!collaboratorsError && matchingCollaborators) {
+                    const matchingIds = matchingCollaborators.map((c) => String(c.funcionario_id).trim());
+                    filtered = filtered.filter((collaborator) =>
+                        matchingIds.includes(String(collaborator.funcionario_id).trim())
+                    );
+                }
+            }
+
+            setFilteredCollaborators(filtered);
+        };
+
+        applyFilters();
+    }, [applyNeighborhoodFilter, selectedPatientId, collaboratorsNotPaginated, patients]);
+
 
     return (
         <form className='h-full'>
