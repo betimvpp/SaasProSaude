@@ -60,7 +60,7 @@ export const PatientTable = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody className="w-full h-full flex items-center">
-                        <div className="w-fullw-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">
+                        <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">
                             <p>Carregando Dados!</p>
                         </div>
                     </TableBody>

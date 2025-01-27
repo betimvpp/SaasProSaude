@@ -60,9 +60,12 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
 
     const generatePDF = () => {
         const doc = new jsPDF();
-        const header = `Colaborador: ${payment.nome}\nChave PIX: ${payment.chave_pix || 'Não informado'}\nTotal (AR): ${collaboratorScalesData
-            .filter(scale => scale.pagamentoAR_AV === 'AR')
-            .reduce((total, scale) => total + (scale.valor_pago || 0), 0)
+        const header = `Colaborador: ${payment.nome}
+        \nChave PIX: ${payment.chave_pix || 'Não informado'}
+        \nCidade: ${payment.cidade || 'Não informado'}
+        \nTotal (AR): ${collaboratorScalesData
+                .filter(scale => scale.pagamentoAR_AV === 'AR')
+                .reduce((total, scale) => total + (scale.valor_pago || 0), 0)
             }`;
 
         // Cabeçalho
@@ -171,8 +174,11 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col overflow-y-scroll'>
             <DialogHeader>
                 <DialogTitle>Escalas do Colaborador: {payment.nome}</DialogTitle>
-                <DialogDescription>
-                    Mês: {getMonthName(payment.mes!)}
+                <DialogDescription className='flex flex-row items-center justify-between'>
+                    <span>
+                        <p>Cidade: {payment.cidade}</p>
+                        <p>Mês: {getMonthName(payment.mes!)}</p>
+                    </span>
                     <button
                         className="ml-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                         onClick={generatePDF}

@@ -43,23 +43,27 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         },
     });
 
+    const handleDateSelection = (range: DateRange | undefined) => {
+        if (!range?.from && !range?.to) {
+            setSelectedData(undefined);
+        } else {
+            setSelectedData(range);
+        }
+    };
+
     const handlePatientSelection = async (patientId: string) => {
         try {
-            // Define o paciente selecionado
             const selectedPatientData = patientsNotPaginated.find(patient => patient.paciente_id === patientId);
             setValue('paciente_id', patientId);
 
             if (selectedPatientData) {
-                // Configura os valores específicos do paciente
                 setValue('valor_recebido', selectedPatientData.pagamento_dia!);
                 setValue('valor_pago', selectedPatientData.pagamento_a_profissional!);
 
-                // Filtra colaboradores pela cidade
                 let filteredCollaborators = collaboratorsNotPaginated.filter(
                     collaborator => collaborator.cidade === selectedPatientData.cidade
                 );
 
-                // Busca especialidades do paciente no Supabase
                 const { data: patientSpecialties, error: specialtiesError } = await supabase
                     .from('paciente_especialidades')
                     .select('especialidade_id')
@@ -75,7 +79,6 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                 if (patientSpecialties && patientSpecialties.length > 0) {
                     const specialtyIds = patientSpecialties.map(specialty => specialty.especialidade_id);
 
-                    // Busca colaboradores com especialidades correspondentes
                     const { data: matchingCollaborators, error: collaboratorsError } = await supabase
                         .from('funcionario_especialidade')
                         .select('funcionario_id')
@@ -87,17 +90,15 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     } else if (matchingCollaborators && matchingCollaborators.length > 0) {
                         const matchingCollaboratorIds = matchingCollaborators.map(c => c.funcionario_id);
 
-                        // Refina a lista de colaboradores, considerando cidade e especialidades
                         filteredCollaborators = filteredCollaborators.filter(collaborator =>
                             matchingCollaboratorIds.includes(collaborator.funcionario_id)
                         );
                     } else {
                         toast.error('Nenhum colaborador encontrado com as especialidades do paciente.');
-                        filteredCollaborators = []; // Nenhum colaborador encontrado
+                        filteredCollaborators = [];
                     }
                 }
 
-                // Atualiza a lista de colaboradores filtrados
                 setFilteredCollaborators(filteredCollaborators);
             }
         } catch (error) {
@@ -113,7 +114,6 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         const newSchedules: Scale[] = [];
 
         if (selectedServiceType === "P") {
-            // Um colaborador por dia
             dateRange.forEach((date, index) => {
                 const collaborator = selectedCollaborators[index % selectedCollaborators.length];
 
@@ -129,16 +129,13 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                 });
             });
         } else if (selectedServiceType === "SD" || selectedServiceType === "SN") {
-            // Dois colaboradores por dia, alternando SD e SN
             dateRange.forEach((date, index) => {
                 const collaborator1 = selectedCollaborators[index % selectedCollaborators.length];
                 const collaborator2 = selectedCollaborators[(index + 1) % selectedCollaborators.length];
 
-                // Alternar o turno inicial com base no índice do dia (par/ímpar)
                 const initialShift = index % 2 === 0 ? "SD" : "SN";
                 const secondaryShift = initialShift === "SD" ? "SN" : "SD";
 
-                // Primeiro colaborador com turno inicial
                 newSchedules.push({
                     data: format(date, 'yyyy-MM-dd'),
                     paciente_id: watch('paciente_id'),
@@ -150,7 +147,6 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     horario_gerenciamento: collaborator1.horario_gerenciamento,
                 });
 
-                // Segundo colaborador com turno secundário
                 newSchedules.push({
                     data: format(date, 'yyyy-MM-dd'),
                     paciente_id: watch('paciente_id'),
@@ -252,7 +248,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                 locale={ptBR}
                                 mode="range"
                                 selected={selectedData}
-                                onSelect={setSelectedData}
+                                onSelect={handleDateSelection}
                                 classNames={{
                                     range_start: `bg-primary border-none rounded-full text-black`,
                                     range_middle: `bg-emerald-100 border-none`,

@@ -5,6 +5,7 @@ import { z } from "zod";
 export const paymentInfoSchema = z.object({
     funcionario_id: z.string().uuid(),
     nome: z.string().optional(),
+    cidade: z.string().optional(),
     telefone: z.string().optional(),
     cargo: z.string().optional(),
     chave_pix: z.string().optional(),
@@ -124,6 +125,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                     return {
                         funcionario_id: collaborator.funcionario_id,
                         nome: collaborator.nome,
+                        cidade: collaborator.cidade,
                         cargo: collaborator.role,
                         telefone: collaborator.telefone,
                         chave_pix: collaborator.chave_pix,
