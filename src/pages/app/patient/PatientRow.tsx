@@ -3,26 +3,11 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { Patient } from '@/contexts/patientContext'
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/authContext'
-import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext'
 import { PatientTabs } from './PatientTabs'
+import { useState } from 'react'
 
-export const PatientRow = ({ patient }: { patient: Patient }) => {
+export const PatientRow = ({ patient, isAdmin, isLoading }: { patient: Patient; isAdmin: string; isLoading: boolean; }) => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
-    }, [user, getCollaboratorById]);
 
     return (
         <>
@@ -55,7 +40,7 @@ export const PatientRow = ({ patient }: { patient: Patient }) => {
                     {patient?.plano_saude ? patient.plano_saude : "N/A"}
                 </TableCell>
 
-                {isLoading ? null : collaboratorData?.role === 'admin' && (
+                {isLoading ? null : isAdmin === 'admin' && (
                     <TableCell className="text-center">
                         {patient?.pagamento_dia ? patient.pagamento_dia : "N/A"}
                     </TableCell>
@@ -65,7 +50,7 @@ export const PatientRow = ({ patient }: { patient: Patient }) => {
                     {patient?.pagamento_a_profissional ? patient.pagamento_a_profissional : "N/A"}
                 </TableCell>
 
-                {isLoading ? null : collaboratorData?.role !== 'admin' && (
+                {isLoading ? null : isAdmin !== 'admin' && (
                     <>
                         <TableCell className="text-center"> {patient?.cidade ? patient.cidade : "N/A"}</TableCell>
                         <TableCell className="text-center"> {patient?.rua ? patient.rua : "N/A"}</TableCell>

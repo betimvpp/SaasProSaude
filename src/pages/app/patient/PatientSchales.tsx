@@ -30,10 +30,17 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
             const perPage = 10;
             const offset = pageIndex * perPage;
 
+            const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
+            const endOfMonth = new Date(new Date(new Date().setMonth(new Date().getMonth() + 1)).setDate(0))
+                .toISOString()
+                .split("T")[0];
+
             const { count: totalScalesCount, error: totalError } = await supabase
                 .from("escala")
                 .select("*", { count: "exact", head: true })
-                .eq("paciente_id", paciente_id);
+                .eq("paciente_id", paciente_id)
+                .gte("data", startOfMonth)
+                .lte("data", endOfMonth);;
 
             if (totalError) {
                 console.error("Erro ao buscar contagem de escalas:", totalError);
@@ -44,6 +51,8 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                 .from("escala")
                 .select(`escala_id, paciente_id, funcionario_id, data, tipo_servico, valor_recebido, valor_pago, pagamentoAR_AV`)
                 .eq("paciente_id", paciente_id)
+                .gte("data", startOfMonth)
+                .lte("data", endOfMonth)
                 .order("data", { ascending: false })
                 .range(offset, offset + perPage - 1);
 
@@ -65,7 +74,7 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                     return null;
                 }
 
-               
+
                 return {
                     ...scale,
                     nomeFuncionario: collaboratorData?.nome,

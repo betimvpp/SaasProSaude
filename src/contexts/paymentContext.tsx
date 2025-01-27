@@ -156,6 +156,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(true);
                 const perPage = 10;
                 const offset = pageIndex * perPage;
+                
                 const year = parseInt(month.split("-")[0], 10);
                 const monthNumber = parseInt(month.split("-")[1], 10);
                 const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();

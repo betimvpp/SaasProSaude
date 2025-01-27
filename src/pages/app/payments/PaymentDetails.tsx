@@ -90,16 +90,22 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         doc.save(`Escalas_${payment.nome}.pdf`);
     };
 
-    const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0) => {
+    const fetchCollaboratorScales = useCallback(async (funcionario_id: string, month: string, pageIndex: number = 0) => {
         try {
             setIsLoading(true);
             const perPage = 10;
             const offset = pageIndex * perPage;
 
+            const year = parseInt(month.split("-")[0], 10);
+            const monthNumber = parseInt(month.split("-")[1], 10);
+            const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
+
             const { count: totalScalesCount, error: totalError } = await supabase
                 .from("escala")
                 .select("*", { count: "exact", head: true })
-                .eq("funcionario_id", funcionario_id);
+                .eq("funcionario_id", funcionario_id)
+                .gte("data", `${month}-01`)
+                .lte("data", `${month}-${lastDayOfMonth}`);
 
             if (totalError) {
                 console.error("Erro ao buscar contagem de escalas:", totalError);
@@ -111,6 +117,8 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                 .select(`escala_id, paciente_id, funcionario_id, data, tipo_servico, valor_recebido, valor_pago, pagamentoAR_AV`)
                 .eq("funcionario_id", funcionario_id)
                 .order("data", { ascending: false })
+                .gte("data", `${month}-01`)
+                .lte("data", `${month}-${lastDayOfMonth}`)
                 .range(offset, offset + perPage - 1);
 
             if (scalesError) {
@@ -153,7 +161,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
 
     useEffect(() => {
         if (payment?.funcionario_id && payment?.mes && !isFirstRender.current) {
-            fetchCollaboratorScales(payment.funcionario_id, pageIndex);
+            fetchCollaboratorScales(payment.funcionario_id, payment.mes, pageIndex);
         } else {
             isFirstRender.current = false;
         }
