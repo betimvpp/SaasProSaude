@@ -16,8 +16,8 @@ import { toast } from 'sonner'
 import supabase from '@/lib/supabase'
 
 export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
-    const { patients, fetchPatients } = usePatients();
-    const { collaborators, fetchCollaborator } = useCollaborator();
+    const { patientsNotPaginated, fetchPatientsNotPaginated } = usePatients();
+    const { collaboratorsNotPaginated, fetchCollaboratorNotPaginated } = useCollaborator();
     const [searchValue, setSearchValue] = useState('');
     const [collaboratorSearchValue, setCollaboratorSearchValue] = useState('');
     const [selectedServiceType, setSelectedServiceType] = useState<string>('');
@@ -43,7 +43,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     const handlePatientSelection = async (patientId: string) => {
         try {
-            const selectedPatientData = patients.find(patient => patient.paciente_id === patientId);
+            const selectedPatientData = patientsNotPaginated.find(patient => patient.paciente_id === patientId);
             setValue('paciente_id', patientId);
 
             if (selectedPatientData) {
@@ -86,7 +86,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                 schedule.funcionario_id === newSchedule.funcionario_id
         );
 
-        if (isDuplicate) {
+        if (isDuplicate && selectedServiceType !== "GR") {
             toast.error("Já existe uma escala para este colaborador nesta data.");
             return;
         }
@@ -120,12 +120,12 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchPatients({ patientName: searchValue });
-            fetchCollaborator({ collaboratorName: collaboratorSearchValue });
+            fetchPatientsNotPaginated({ patientName: searchValue });
+            fetchCollaboratorNotPaginated({ collaboratorName: collaboratorSearchValue });
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaborator]);
+    }, [searchValue, fetchPatientsNotPaginated, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
 
 
     return (
@@ -174,7 +174,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                         }}
                                     />
 
-                                    {patients.map((patient) => (
+                                    {patientsNotPaginated.map((patient) => (
                                         <SelectItem {...register('paciente_id')} key={patient.paciente_id} value={patient.paciente_id}>
                                             {patient.nome}
                                         </SelectItem>
@@ -239,7 +239,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                             setCollaboratorValue("collaboratorName", value);
                                         }}
                                     />
-                                    {collaborators.map((collaborator) => (
+                                    {collaboratorsNotPaginated.map((collaborator) => (
                                         <SelectItem key={collaborator.funcionario_id} value={collaborator.funcionario_id}>
                                             {collaborator.nome}
                                         </SelectItem>

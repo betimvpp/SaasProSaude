@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import supabase from '@/lib/supabase'
 
 export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
-    const { patients, fetchPatients } = usePatients();
+    const { patientsNotPaginated, fetchPatientsNotPaginated } = usePatients();
     const { collaboratorsNotPaginated, fetchCollaboratorNotPaginated } = useCollaborator();
     const [searchValue, setSearchValue] = useState('');
     const [collaboratorSearchValue, setCollaboratorSearchValue] = useState('');
@@ -150,12 +150,12 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchPatients({ patientName: searchValue });
+            fetchPatientsNotPaginated({ patientName: searchValue });
             fetchCollaboratorNotPaginated({ collaboratorName: collaboratorSearchValue });
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
+    }, [searchValue, fetchPatientsNotPaginated, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
 
     useEffect(() => {
         if (selectedData) {
@@ -167,7 +167,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         const applyFilters = async () => {
             if (!selectedPatientId) return; // Certifique-se de que um paciente está selecionado
 
-            const selectedPatientData = patients.find((patient) => patient.paciente_id === selectedPatientId);
+            const selectedPatientData = patientsNotPaginated.find((patient) => patient.paciente_id === selectedPatientId);
             if (!selectedPatientData) return;
 
             let filtered = collaboratorsNotPaginated.filter(
@@ -229,7 +229,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         };
 
         applyFilters();
-    }, [applyNeighborhoodFilter, selectedPatientId, collaboratorsNotPaginated, patients]);
+    }, [applyNeighborhoodFilter, selectedPatientId, collaboratorsNotPaginated, patientsNotPaginated]);
 
 
     return (
@@ -278,7 +278,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                         }}
                                     />
 
-                                    {patients.map((patient) => (
+                                    {patientsNotPaginated.map((patient) => (
                                         <SelectItem {...register('paciente_id')} key={patient.paciente_id} value={patient.paciente_id}>
                                             {patient.nome}
                                         </SelectItem>
