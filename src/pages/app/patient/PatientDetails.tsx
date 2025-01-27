@@ -36,7 +36,6 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
         }
     };
 
-
     const handleUpdate = async (dataResp: Patient) => {
         if (!dataResp.cpf) {
             toast.error("Cpf é obrigatório");
@@ -48,6 +47,9 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
             toast.error("Erro: ID do paciente indefinido.");
             return;
         }
+
+        dataResp.pagamento_dia = parseFloat(dataResp.pagamento_dia?.toFixed(2) || "0");
+        dataResp.pagamento_a_profissional = parseFloat(dataResp.pagamento_a_profissional?.toFixed(2) || "0");
 
         try {
             await updatePatient(dataResp, patient.paciente_id, selectedHabilities); // Adicionando as habilidades selecionadas
@@ -155,16 +157,26 @@ export const PatientDetails = ({ patient, isAdmin, isLoading }: { patient: Patie
                             <TableRow>
                                 <TableCell className="font-semibold">Pagamento/Dia:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="pagamento_dia" type="number" {...register("pagamento_dia")} />
+                                    <Input
+                                        id="pagamento_dia"
+                                        defaultValue={patient.pagamento_dia}
+                                        placeholder="Ex: 22.5"
+                                        onChange={(e) => setValue("pagamento_dia", parseFloat(e.target.value) || 0)}
+                                    />
                                 </TableCell>
                             </TableRow>
                         ) : (
                             <></>
                         )}
                         <TableRow>
-                            <TableCell className="font-semibold">Pagamento/Profisional:</TableCell>
+                            <TableCell className="font-semibold">Pagamento/Profissional:</TableCell>
                             <TableCell className="flex justify-start -mt-2">
-                                <Input id="pagamento_a_profissional" type="number" {...register("pagamento_a_profissional")} />
+                                <Input
+                                    id="pagamento_a_profissional"
+                                    defaultValue={patient.pagamento_a_profissional}
+                                    placeholder="Ex: 18.7"
+                                    onChange={(e) => setValue("pagamento_a_profissional", parseFloat(e.target.value) || 0)}
+                                />
                             </TableCell>
                         </TableRow>
 

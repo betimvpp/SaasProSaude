@@ -16,7 +16,7 @@ import { toast } from 'sonner'
 import supabase from '@/lib/supabase'
 
 export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
-    const { patients, fetchPatients } = usePatients();
+    const { patientsNotPaginated, fetchPatientsNotPaginated } = usePatients();
     const { collaboratorsNotPaginated, fetchCollaboratorNotPaginated } = useCollaborator();
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([]);
     const [searchValue, setSearchValue] = useState('');
@@ -46,7 +46,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const handlePatientSelection = async (patientId: string) => {
         try {
             // Define o paciente selecionado
-            const selectedPatientData = patients.find(patient => patient.paciente_id === patientId);
+            const selectedPatientData = patientsNotPaginated.find(patient => patient.paciente_id === patientId);
             setValue('paciente_id', patientId);
 
             if (selectedPatientData) {
@@ -233,12 +233,12 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
-            fetchPatients({ patientName: searchValue });
+            fetchPatientsNotPaginated({ patientName: searchValue });
             fetchCollaboratorNotPaginated({ collaboratorName: collaboratorSearchValue });
         }, 500);
 
         return () => clearTimeout(timeoutId);
-    }, [searchValue, fetchPatients, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
+    }, [searchValue, fetchPatientsNotPaginated, collaboratorSearchValue, fetchCollaboratorNotPaginated]);
 
     return (
         <form className='h-full'>
@@ -288,7 +288,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                         }}
                                     />
 
-                                    {patients.map((patient) => (
+                                    {patientsNotPaginated.map((patient) => (
                                         <SelectItem {...register('paciente_id')} key={patient.paciente_id} value={patient.paciente_id}>
                                             {patient.nome}
                                         </SelectItem>
