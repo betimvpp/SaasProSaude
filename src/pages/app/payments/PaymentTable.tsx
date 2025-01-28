@@ -27,9 +27,9 @@ export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
         }
     }, [user, getCollaboratorById]);
 
-    const currentMonth = selectedMonth || new Date().toISOString().slice(0, 7); 
-    const [year, month] = currentMonth.split('-').map(Number); 
-    const monthDate = new Date(year, month - 1); 
+    const currentMonth = selectedMonth || new Date().toISOString().slice(0, 7);
+    const [year, month] = currentMonth.split('-').map(Number);
+    const monthDate = new Date(year, month - 1);
     const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(monthDate);
 
     const generatePDF = () => {
@@ -66,42 +66,47 @@ export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
     };
 
     return (
-        <Table>
-            <TableHeader>
-                <TableRow className="text-center">
-                    <TableHead className="w-4"></TableHead>
-                    <TableHead className="text-center">Nome do Colaborador</TableHead>
-                    <TableHead className="text-center">Telefone do Colaborador</TableHead>
-                    <TableHead className="text-center">Cargo do Colaborador</TableHead>
-                    {!isLoading && collaboratorData?.role === 'admin' ? (
-                        <TableHead className="text-center">Valor/Recebido</TableHead>
-                    ) : (
-                        <></>
-                    )}
-                    <TableHead className="text-center">Valor/Pago</TableHead>
-                    <TableHead className="text-center">Chave Pix</TableHead>
-                    <TableHead className="text-center">
-                        <button
-                            onClick={generatePDF}
-                            className="px-3 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
-                        >
-                            Gerar Fatura
-                        </button>
-                    </TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {paymentData &&
-                    paymentData.map((payment) => (
-                        <PaymentRow
-                            loading={isLoading}
-                            isAdmin={collaboratorData?.role!}
-                            key={payment.funcionario_id}
-                            payment={payment}
-                        />
-                    ))}
-            </TableBody>
-            {loading === true && paymentData.length <= 0 && <TableSkeleton />}
-        </Table>
+        <>
+            {!isLoading ?
+                <Table>
+                    <TableHeader>
+                        <TableRow className="text-center">
+                            <TableHead className="w-4"></TableHead>
+                            <TableHead className="text-center">Nome do Colaborador</TableHead>
+                            <TableHead className="text-center">Telefone do Colaborador</TableHead>
+                            <TableHead className="text-center">Cargo do Colaborador</TableHead>
+                            {!isLoading && collaboratorData?.role === 'admin' &&
+                                <TableHead className="text-center">Valor/Recebido</TableHead>
+                            }
+                            <TableHead className="text-center">Valor/Pago</TableHead>
+                            <TableHead className="text-center">Chave Pix</TableHead>
+                            <TableHead className="text-center">
+                                <button
+                                    onClick={generatePDF}
+                                    className="px-3 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
+                                >
+                                    Gerar Fatura
+                                </button>
+                            </TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paymentData &&
+                            paymentData.map((payment) => (
+                                <PaymentRow
+                                    loading={isLoading}
+                                    isAdmin={collaboratorData?.role!}
+                                    key={payment.funcionario_id}
+                                    payment={payment}
+                                />
+                            ))}
+                    </TableBody>
+                    {loading === true && paymentData.length <= 0 && <TableSkeleton />}
+                </Table> :
+                <div className='w-full h-full flex items-center justify-center text-muted-foreground'>
+                    Carregando dados...
+                </div>
+            }
+        </>
     );
 };

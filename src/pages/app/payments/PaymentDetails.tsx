@@ -188,39 +188,44 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                 </DialogDescription>
             </DialogHeader>
             <div className='h-full w-full max-h-[700px] shadow-lg border rounded- overflow-hidden'>
-                <Table className='h-full w-full'>
-                    <TableHeader>
-                        <TableRow className="text-center">
-                            <TableHead className="text-center">Nome do Paciente</TableHead>
-                            <TableHead className="text-center">Telefone do Paciente</TableHead>
-                            <TableHead className="text-center">Tipo De Serviço</TableHead>
-                            <TableHead className="text-center">Horário</TableHead>
-                            <TableHead className="text-center">Data</TableHead>
-                            {!loading && isAdmin === 'admin' ? <TableHead className="text-center">Valor/Recebido</TableHead> : <></>}
-                            <TableHead className="text-center">Valor/Pago</TableHead>
-                            <TableHead className="text-center">Pagamento AR/AV</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody className='h-full w-full'>
-                        {scales.map((scale, index) => (
-                            <TableRow className='text-center' key={index}>
-                                <TableCell>{scale.nomePaciente}</TableCell>
-                                <TableCell>{scale.telefonePaciente || "Telefone não definido"}</TableCell>
-                                <TableCell>{scale.tipo_servico}</TableCell>
-                                <TableCell>{getServiceTime(scale.tipo_servico!, "Horário não definido")}</TableCell>
-                                <TableCell>{scale?.data?.toLocaleString()}</TableCell>
-                                {loading ? null : isAdmin === 'admin' && (
-                                    <TableCell className="text-center">
-                                        {scale?.valor_recebido ? scale.valor_recebido : "N/A"}
-                                    </TableCell>
-                                )}
-                                <TableCell>{scale.valor_pago}</TableCell>
-                                <TableCell>{scale.pagamentoAR_AV}</TableCell>
+                {!isLoading ?
+                    <Table className='h-full w-full'>
+                        <TableHeader>
+                            <TableRow className="text-center">
+                                <TableHead className="text-center">Nome do Paciente</TableHead>
+                                <TableHead className="text-center">Telefone do Paciente</TableHead>
+                                <TableHead className="text-center">Tipo De Serviço</TableHead>
+                                <TableHead className="text-center">Horário</TableHead>
+                                <TableHead className="text-center">Data</TableHead>
+                                {!loading && isAdmin === 'admin' ? <TableHead className="text-center">Valor/Recebido</TableHead> : <></>}
+                                <TableHead className="text-center">Valor/Pago</TableHead>
+                                <TableHead className="text-center">Pagamento AR/AV</TableHead>
                             </TableRow>
-                        ))}
-                    </TableBody>
-                    {loadingScales && <TableSkeleton />}
-                </Table>
+                        </TableHeader>
+                        <TableBody className='h-full w-full'>
+                            {scales.map((scale, index) => (
+                                <TableRow className='text-center' key={index}>
+                                    <TableCell>{scale.nomePaciente}</TableCell>
+                                    <TableCell>{scale.telefonePaciente || "Telefone não definido"}</TableCell>
+                                    <TableCell>{scale.tipo_servico}</TableCell>
+                                    <TableCell>{getServiceTime(scale.tipo_servico!, "Horário não definido")}</TableCell>
+                                    <TableCell>{scale?.data?.toLocaleString()}</TableCell>
+                                    {loading ? null : isAdmin === 'admin' && (
+                                        <TableCell className="text-center">
+                                            {scale?.valor_recebido ? scale.valor_recebido : "N/A"}
+                                        </TableCell>
+                                    )}
+                                    <TableCell>{scale.valor_pago}</TableCell>
+                                    <TableCell>{scale.pagamentoAR_AV}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        {loadingScales && <TableSkeleton />}
+                    </Table> :
+                    <div className='w-full h-full flex items-center justify-center text-muted-foreground'>
+                        Carregando dados...
+                    </div>
+                }
                 {!isLoading && scales.length <= 0 && (
                     <div className="w-full h-[90%] m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">
                         Nenhum paciente encontrado!
