@@ -90,7 +90,6 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-
     const fetchCollaboratorNotPaginated = useCallback(async (filters: CollaboratorFiltersSchema = { collaboratorId: '', collaboratorName: '', role: 'all' }) => {
         setLoading(true);
 
@@ -230,7 +229,7 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
                         }));
 
                         await supabase
-                            .from('funcionario_especialidades')
+                            .from('funcionario_especialidade')
                             .insert(especialidadesData);
                     }
                 }

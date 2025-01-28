@@ -13,6 +13,7 @@ export const scaleSchema = z.object({
     pagamentoAR_AV: z.string().nullable(),
     nomeFuncionario: z.string().optional().nullable(),
     nomePaciente: z.string().optional().nullable(),
+    telefonePaciente: z.string().optional().nullable(),
     horario_gerenciamento: z.string().optional().nullable(),
     troca_servico_id: z.bigint().optional(),
 });

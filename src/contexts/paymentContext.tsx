@@ -5,6 +5,7 @@ import { z } from "zod";
 export const paymentInfoSchema = z.object({
     funcionario_id: z.string().uuid(),
     nome: z.string().optional(),
+    cidade: z.string().optional(),
     telefone: z.string().optional(),
     cargo: z.string().optional(),
     chave_pix: z.string().optional(),
@@ -124,6 +125,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                     return {
                         funcionario_id: collaborator.funcionario_id,
                         nome: collaborator.nome,
+                        cidade: collaborator.cidade,
                         cargo: collaborator.role,
                         telefone: collaborator.telefone,
                         chave_pix: collaborator.chave_pix,
@@ -141,7 +143,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
 
             setPaymentData(paginatedPayments);
             setPaymentDataNotPaginated(allPayments);
-            setTotalCount(allPayments.length); 
+            setTotalCount(allPayments.length);
         } catch (error) {
             console.error("Erro ao buscar pagamentos:", error);
             setPaymentData([]);
@@ -150,13 +152,13 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
-
     const fetchCollaboratorScales = useCallback(
         async (funcionario_id: string = '', month: string = '', pageIndex: number = 0) => {
             try {
                 setLoading(true);
                 const perPage = 10;
                 const offset = pageIndex * perPage;
+                
                 const year = parseInt(month.split("-")[0], 10);
                 const monthNumber = parseInt(month.split("-")[1], 10);
                 const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
@@ -226,6 +228,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
         },
         []
     );
+
 
     return (
         <PaymentContext.Provider value={{ fetchPayments, loading, paymentData, paymentDataNotPaginated, totalCount, collaboratorScalesData, fetchCollaboratorScales, totalScalesCount }}>

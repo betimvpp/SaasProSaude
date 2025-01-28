@@ -17,7 +17,7 @@ export interface CollaboratorDetailsProps {
 }
 
 export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collaborator; }) => {
-    const { habilities, loading, fetchPatientHabilities } = useHabilities();
+    const { habilities, loading, fetchCollaboratorHabilities } = useHabilities();
     const [selectedHabilities, setSelectedHabilities] = useState<number[]>([]);
     const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
     const [newNeighborhood, setNewNeighborhood] = useState("");
@@ -125,14 +125,14 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
     useEffect(() => {
         if (collaborator.funcionario_id) {
             const loadPatientHabilities = async () => {
-                const collaboratorHabilities = await fetchPatientHabilities(collaborator.funcionario_id);
+                const collaboratorHabilities = await fetchCollaboratorHabilities(collaborator.funcionario_id);
                 setSelectedHabilities(collaboratorHabilities);
             };
 
             loadPatientHabilities();
         }
         fetchCities();
-    }, [collaborator.funcionario_id, fetchPatientHabilities]);
+    }, [collaborator.funcionario_id, fetchCollaboratorHabilities]);
 
     useEffect(() => {
         const fetchNeighborhoods = async () => {

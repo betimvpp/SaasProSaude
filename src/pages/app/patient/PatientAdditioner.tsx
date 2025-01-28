@@ -161,20 +161,16 @@ export const PatientAdditioner = () => {
                             </TableCell>
                         </TableRow>
                         {!isLoading && collaboratorData?.role === 'admin' ? (
-                            <>
-                                <TableRow>
-                                    <TableCell className="font-semibold">Pagamento/Dia:</TableCell>
-                                    <TableCell className="flex justify-start -mt-2">
-                                        <Input
-                                            id="pagamento_dia"
-                                            type="number"
-                                            placeholder="Ex: 250"
-                                            onChange={(e) => setValue("pagamento_dia", parseInt(e.target.value) || 0)}
-                                        />
-                                    </TableCell>
-                                </TableRow>
-
-                            </>
+                            <TableRow>
+                                <TableCell className="font-semibold">Pagamento/Dia:</TableCell>
+                                <TableCell className="flex justify-start -mt-2">
+                                    <Input
+                                        id="pagamento_dia"
+                                        placeholder="Ex: 250"
+                                        onChange={(e) => setValue("pagamento_dia", parseFloat(e.target.value) || 0)}
+                                    />
+                                </TableCell>
+                            </TableRow>
                         ) : (
                             <></>
                         )}
@@ -183,9 +179,8 @@ export const PatientAdditioner = () => {
                             <TableCell className="flex justify-start -mt-2">
                                 <Input
                                     id="pagamento_a_profissional"
-                                    type="number"
                                     placeholder="Ex: 200"
-                                    onChange={(e) => setValue("pagamento_a_profissional", parseInt(e.target.value) || 0)}
+                                    onChange={(e) => setValue("pagamento_a_profissional", parseFloat(e.target.value) || 0)}
                                 />
                             </TableCell>
                         </TableRow>
