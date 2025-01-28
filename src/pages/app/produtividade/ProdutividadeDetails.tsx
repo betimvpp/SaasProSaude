@@ -47,7 +47,7 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
         ]);
 
         doc.autoTable({
-            head: [['Atendi Por', 'Cargo', 'Tipo De Serviço', 'Data', 'Valor Pago', 'Pagamento']],
+            head: [['Atendido Por', 'Cargo', 'Tipo De Serviço', 'Data', 'Valor Pago', 'Pagamento']],
             body: tableData,
             startY: 30,
         });
