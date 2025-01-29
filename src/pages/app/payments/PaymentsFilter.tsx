@@ -7,9 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, } from '
 import { PaymentFilters, paymentFiltersSchema, usePayment } from '@/contexts/paymentContext'
 
 interface PaymentFilterProps {
-    setSelectedMonth: (month: string) => void;
+    onFilterChange: (month: string, role: string) => void;
 }
-export function PaymentFilter({ setSelectedMonth }: PaymentFilterProps) {
+export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
     const { fetchPayments } = usePayment();
 
     const { register, handleSubmit, control, reset } = useForm<PaymentFilters>({
@@ -23,7 +23,7 @@ export function PaymentFilter({ setSelectedMonth }: PaymentFilterProps) {
 
     async function handleFilter(data: PaymentFilters) {
         await fetchPayments(data);
-        setSelectedMonth(data.month!);
+        onFilterChange(data.month!, data.role!)
     }
 
     function handleClearFilters() {

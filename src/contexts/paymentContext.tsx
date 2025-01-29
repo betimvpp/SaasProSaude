@@ -62,95 +62,92 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
     const [totalCount, setTotalCount] = useState(0);
     const [totalScalesCount, setTotalScalesCount] = useState(0);
 
-    const fetchPayments = useCallback(async (filters: PaymentFilters = {}, pageIndex: number = 0) => {
-        try {
-            setLoading(true);
-            const perPage = 10;
-            const offset = pageIndex * perPage;
-            const { collaboratorName, role, month } = filters;
+    const fetchPayments = useCallback(
+        async (filters: PaymentFilters = {}, pageIndex: number = 0) => {
+            try {
+                setLoading(true);
+                const perPage = 10;
+                const offset = pageIndex * perPage;
+                const { collaboratorName, role, month } = filters;
 
-            let baseQuery = supabase
-                .from("funcionario")
-                .select("*")
-                .neq("role", "rh")
-                .neq("role", "admin");
+                let baseQuery = supabase
+                    .from("funcionario")
+                    .select("*")
+                    .neq("role", "rh")
+                    .neq("role", "admin");
 
-            if (collaboratorName) {
-                baseQuery = baseQuery.ilike("nome", `%${collaboratorName}%`);
-            }
+                if (collaboratorName) {
+                    baseQuery = baseQuery.ilike("nome", `%${collaboratorName}%`);
+                }
 
-            if (role && role !== "all") {
-                baseQuery = baseQuery.eq("role", role);
-            }
+                if (role && role !== "all") {
+                    baseQuery = baseQuery.eq("role", role);
+                }
 
-            const { data: allCollaborators, error: fullError } = await baseQuery;
-            if (fullError) {
-                console.error("Erro ao buscar colaboradores filtrados:", fullError);
+                const currentMonth = month || new Date().toISOString().slice(0, 7);
+                const year = parseInt(currentMonth.split("-")[0], 10);
+                const monthNumber = parseInt(currentMonth.split("-")[1], 10);
+                const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
+
+                const { data: allScales, error: scalesError } = await supabase
+                    .from("escala")
+                    .select("*")
+                    .gte("data", `${currentMonth}-01`)
+                    .lte("data", `${currentMonth}-${lastDayOfMonth}`);
+
+                if (scalesError) {
+                    console.error("Erro ao buscar escalas:", scalesError);
+                    setPaymentData([]);
+                    return;
+                }
+
+                const mapPayments = (collaborators: any) =>
+                    collaborators.map((collaborator: any) => {
+                        const collaboratorScales = allScales.filter(
+                            (scale) => scale.funcionario_id === collaborator.funcionario_id
+                        );
+
+                        const valorRecebido = collaboratorScales.reduce(
+                            (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_recebido || 0) : 0),
+                            0
+                        );
+                        const valorPago = collaboratorScales.reduce(
+                            (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_pago || 0) : 0),
+                            0
+                        );
+
+                        return {
+                            funcionario_id: collaborator.funcionario_id,
+                            nome: collaborator.nome,
+                            cidade: collaborator.cidade,
+                            cargo: collaborator.role,
+                            telefone: collaborator.telefone,
+                            chave_pix: collaborator.chave_pix,
+                            valor_recebido: valorRecebido,
+                            valor_pago: valorPago,
+                            mes: currentMonth,
+                        };
+                    });
+
+                const allCollaborators = (await baseQuery).data;
+                const allPayments = mapPayments(allCollaborators || []).filter(
+                    (payment: any) => payment.valor_recebido !== 0 || payment.valor_pago !== 0
+                );
+
+                const paginatedPayments = allPayments.slice(offset, offset + perPage);
+
+                setPaymentData(paginatedPayments);
+                setPaymentDataNotPaginated(allPayments);
+                setTotalCount(allPayments.length);
+            } catch (error) {
+                console.error("Erro ao buscar pagamentos:", error);
                 setPaymentData([]);
-                return;
+            } finally {
+                setLoading(false);
             }
-
-            const currentMonth = month || new Date().toISOString().slice(0, 7);
-            const year = parseInt(currentMonth.split("-")[0], 10);
-            const monthNumber = parseInt(currentMonth.split("-")[1], 10);
-            const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
-
-            const { data: allScales, error: scalesError } = await supabase
-                .from("escala")
-                .select("*")
-                .gte("data", `${currentMonth}-01`)
-                .lte("data", `${currentMonth}-${lastDayOfMonth}`);
-
-            if (scalesError) {
-                console.error("Erro ao buscar escalas:", scalesError);
-                setPaymentData([]);
-                return;
-            }
-
-            const mapPayments = (collaborators: any) =>
-                collaborators.map((collaborator: any) => {
-                    const collaboratorScales = allScales.filter(
-                        (scale) => scale.funcionario_id === collaborator.funcionario_id
-                    );
-
-                    const valorRecebido = collaboratorScales.reduce(
-                        (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_recebido || 0) : 0),
-                        0
-                    );
-                    const valorPago = collaboratorScales.reduce(
-                        (acc, scale) => acc + (scale.pagamentoAR_AV !== "AV" ? (scale.valor_pago || 0) : 0),
-                        0
-                    );
-
-                    return {
-                        funcionario_id: collaborator.funcionario_id,
-                        nome: collaborator.nome,
-                        cidade: collaborator.cidade,
-                        cargo: collaborator.role,
-                        telefone: collaborator.telefone,
-                        chave_pix: collaborator.chave_pix,
-                        valor_recebido: valorRecebido,
-                        valor_pago: valorPago,
-                        mes: currentMonth,
-                    };
-                });
-
-            const allPayments = mapPayments(allCollaborators).filter(
-                (payment: any) => payment.valor_recebido !== 0 || payment.valor_pago !== 0
-            );
-
-            const paginatedPayments = allPayments.slice(offset, offset + perPage);
-
-            setPaymentData(paginatedPayments);
-            setPaymentDataNotPaginated(allPayments);
-            setTotalCount(allPayments.length);
-        } catch (error) {
-            console.error("Erro ao buscar pagamentos:", error);
-            setPaymentData([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+        },
+        []
+    );
 
     const fetchCollaboratorScales = useCallback(
         async (funcionario_id: string = '', month: string = '', pageIndex: number = 0) => {
@@ -158,7 +155,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(true);
                 const perPage = 10;
                 const offset = pageIndex * perPage;
-                
+
                 const year = parseInt(month.split("-")[0], 10);
                 const monthNumber = parseInt(month.split("-")[1], 10);
                 const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
@@ -228,7 +225,6 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
         },
         []
     );
-
 
     return (
         <PaymentContext.Provider value={{ fetchPayments, loading, paymentData, paymentDataNotPaginated, totalCount, collaboratorScalesData, fetchCollaboratorScales, totalScalesCount }}>
