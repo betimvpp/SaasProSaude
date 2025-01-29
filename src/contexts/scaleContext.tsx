@@ -12,6 +12,7 @@ export const scaleSchema = z.object({
     valor_pago: z.number(),
     pagamentoAR_AV: z.string().nullable(),
     nomeFuncionario: z.string().optional().nullable(),
+    chave_pix: z.string().optional().nullable(),
     nomePaciente: z.string().optional().nullable(),
     telefonePaciente: z.string().optional().nullable(),
     horario_gerenciamento: z.string().optional().nullable(),

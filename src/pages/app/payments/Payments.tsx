@@ -8,8 +8,8 @@ import { Pagination } from '@/components/pagination';
 export const Payments = () => {
   const { paymentData, loading, fetchPayments, totalCount } = usePayment();
   const [pageIndex, setPageIndex] = useState(0);
-  const [selectedMonth, setSelectedMonth] = useState<string>(''); // Estado para armazenar o mês selecionado
-  const [selectedRole, setSelectedRole] = useState<string>(''); // Estado para armazenar o mês selecionado
+  const [selectedMonth, setSelectedMonth] = useState<string>(''); // 
+  const [selectedRole, setSelectedRole] = useState<string>('all'); // 
 
   const handlePageChange = (newPageIndex: number) => {
     setPageIndex(newPageIndex);
