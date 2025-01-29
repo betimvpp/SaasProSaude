@@ -58,7 +58,7 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
 
 
     useEffect(() => {
-        if (!open && produtividade?.paciente_id && month && !isFirstRender.current) {
+        if (!open && produtividade?.paciente_id && month) {
             fetachEscapaByPacienteId(produtividade.paciente_id, month, pageIndex);
         } else {
             isFirstRender.current = false;
