@@ -168,7 +168,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
     }, [payment, fetchCollaboratorScales, pageIndex]);
 
     return (
-        <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col overflow-y-scroll'>
+        <DialogContent className='min-w-[90vw] min-h-[75vh] max-h-[95vh] flex flex-col overflow-y-scroll'>
             <DialogHeader>
                 <DialogTitle>Escalas do Colaborador: {payment.nome}</DialogTitle>
                 <DialogDescription className='flex flex-row items-center justify-between'>
@@ -184,9 +184,9 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                     </button>
                 </DialogDescription>
             </DialogHeader>
-            <div className='h-full w-full max-h-[700px] shadow-lg border rounded- overflow-hidden'>
+            <div className='w-full h-full min-h-[580px] shadow-lg border rounded-md'>
                 {!isLoading ?
-                    <Table className='h-full w-full'>
+                    <Table className='h-full'>
                         <TableHeader>
                             <TableRow className="text-center">
                                 <TableHead className="text-center">Nome do Paciente</TableHead>
