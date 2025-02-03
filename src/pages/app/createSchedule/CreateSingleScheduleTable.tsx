@@ -27,6 +27,8 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([])
     const [applyNeighborhoodFilter, setApplyNeighborhoodFilter] = useState(false);
     const [selectedPatientId, setSelectedPatientId] = useState('');
+    const [availableServices, setAvailableServices] = useState<string[]>([]);
+
 
     const { register, setValue, watch, } = useForm<Scale>({});
 
@@ -48,7 +50,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         setSelectedPatientId(patientId);
     };
 
-    const fetchAvailableCollaborators = async (date: Date) => {
+    const fetchAvailableCollaborators = async (date: Date, patientId?: string) => {
         try {
             if (!date) {
                 toast.error("Selecione uma data válida.");
@@ -68,19 +70,50 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                 return;
             }
 
-            if (availableCollaborators && availableCollaborators.length > 0) {
-                // Garante consistência no formato dos IDs
-                const collaboratorIds = availableCollaborators.map(c => String(c.funcionario_id).trim());
-
-                const filtered = collaboratorsNotPaginated.filter(collaborator =>
-                    collaboratorIds.includes(String(collaborator.funcionario_id).trim())
-                );
-
-                setFilteredCollaborators(filtered);
-            } else {
+            if (!availableCollaborators || availableCollaborators.length === 0) {
                 toast.info('Nenhum colaborador disponível para a data selecionada.');
                 setFilteredCollaborators([]);
+                return;
             }
+
+            let collaboratorIds = availableCollaborators.map(c => String(c.funcionario_id).trim());
+
+            let filtered = collaboratorsNotPaginated.filter(collaborator =>
+                collaboratorIds.includes(String(collaborator.funcionario_id).trim())
+            );
+
+            // Se houver um paciente selecionado, aplicar a filtragem por especialidade
+            if (patientId) {
+                const { data: patientSpecialties, error: specialtiesError } = await supabase
+                    .from("paciente_especialidades")
+                    .select("especialidade_id")
+                    .eq("paciente_id", patientId);
+
+                if (specialtiesError) {
+                    console.error("Erro ao buscar especialidades do paciente:", specialtiesError);
+                    toast.error("Erro ao buscar especialidades do paciente.");
+                    setFilteredCollaborators(filtered);
+                    return;
+                }
+
+                if (patientSpecialties && patientSpecialties.length > 0) {
+                    const specialtyIds = patientSpecialties.map((s) => String(s.especialidade_id).trim());
+
+                    const { data: matchingCollaborators, error: collaboratorsError } = await supabase
+                        .from("funcionario_especialidade")
+                        .select("funcionario_id")
+                        .in("especialidade_id", specialtyIds);
+
+                    if (!collaboratorsError && matchingCollaborators) {
+                        const matchingIds = matchingCollaborators.map((c) => String(c.funcionario_id).trim());
+                        filtered = filtered.filter((collaborator) =>
+                            matchingIds.includes(String(collaborator.funcionario_id).trim())
+                        );
+                    }
+                }
+            }
+
+            setFilteredCollaborators(filtered);
         } catch (error) {
             console.error('Erro ao buscar colaboradores disponíveis:', error);
             toast.error('Erro inesperado ao buscar colaboradores disponíveis.');
@@ -165,7 +198,7 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     useEffect(() => {
         const applyFilters = async () => {
-            if (!selectedPatientId) return; // Certifique-se de que um paciente está selecionado
+            if (!selectedPatientId || !selectedData) return;
 
             const selectedPatientData = patientsNotPaginated.find((patient) => patient.paciente_id === selectedPatientId);
             if (!selectedPatientData) return;
@@ -229,7 +262,38 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         };
 
         applyFilters();
-    }, [applyNeighborhoodFilter, selectedPatientId, collaboratorsNotPaginated, patientsNotPaginated]);
+    }, [applyNeighborhoodFilter, selectedPatientId, collaboratorsNotPaginated, patientsNotPaginated, selectedData]);
+
+    useEffect(() => {
+        const fetchCollaboratorAvailability = async () => {
+            if (!selectedCollaboratorId || !selectedData) {
+                setAvailableServices([]);
+                return;
+            }
+
+            const formattedDate = format(selectedData, 'yyyy-MM-dd');
+
+            const { data, error } = await supabase
+                .from('disponibilidade_funcionario')
+                .select('tipo_servico')
+                .eq('funcionario_id', selectedCollaboratorId)
+                .eq('data', formattedDate);
+
+            if (error) {
+                console.error('Erro ao buscar disponibilidade do colaborador:', error);
+                toast.error('Erro ao buscar disponibilidade do colaborador.');
+                return;
+            }
+
+            if (data) {
+                setAvailableServices(data.map(item => item.tipo_servico));
+            } else {
+                setAvailableServices([]);
+            }
+        };
+
+        fetchCollaboratorAvailability();
+    }, [selectedCollaboratorId, selectedData]);
 
 
     return (
@@ -297,15 +361,13 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     </TableRow>
 
                     {/* Pagamento Total */}
-                    {isAdmin === 'admin' ?
+                    {isAdmin === 'admin' &&
                         <TableRow>
                             <TableCell className="font-semibold">Pagamento Total:</TableCell>
                             <TableCell className="flex justify-start -mt-2">
                                 <Input type='number' {...register('valor_recebido')} id='valor_recebido' />
                             </TableCell>
                         </TableRow>
-                        :
-                        <></>
                     }
 
                     {/* Pagamento AR/AV */}
@@ -405,6 +467,22 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                 </TableCell>
                             </>
                         )}
+                    </TableRow>
+
+                    {/* Disponibilidade do colaborador */}
+                    <TableRow className='pb-3'>
+                        <TableCell className='font-semibold'>
+                            Disponibilidades do Colaborador:
+                        </TableCell>
+
+                        <TableCell className='flex justify-between'>
+                            {availableServices.length > 0 ? (
+                                <p className="">{availableServices.join(', ')}</p>
+                            ) : (
+                                <p className="text-sm text-gray-500">Nenhum serviço disponível para este colaborador nesta data.</p>
+                            )}
+                        </TableCell>
+
                     </TableRow>
 
                     <TableRow>

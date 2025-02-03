@@ -10,37 +10,44 @@ import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-
+const months = [
+    { value: "1", label: "Janeiro" },
+    { value: "2", label: "Fevereiro" },
+    { value: "3", label: "Março" },
+    { value: "4", label: "Abril" },
+    { value: "5", label: "Maio" },
+    { value: "6", label: "Junho" },
+    { value: "7", label: "Julho" },
+    { value: "8", label: "Agosto" },
+    { value: "9", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+];
 export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Patient; isAdmin: string; isLoading: boolean; }) => {
     const [scales, setPatientScalesData] = useState<Scale[]>([]);
     const [loading, setLoading] = useState(false);
     const [totalCount, setTotalScalesCount] = useState(0);
     const [pageIndex, setPageIndex] = useState(0);
     const [editingRow, setEditingRow] = useState<number | null>(null);
-    const [editedValues, setEditedValues] = useState<{
-        valor_pago: string;
-        pagamentoAR_AV: string;
-        valor_recebido: string;
-        tipo_servico: string;
-    }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
+    const [editedValues, setEditedValues] = useState<{ valor_pago: string; pagamentoAR_AV: string; valor_recebido: string; tipo_servico: string; }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
-    const fetchPatientScales = useCallback(async (paciente_id: string, pageIndex: number = 0) => {
+    const fetchPatientScales = useCallback(async (paciente_id: string, pageIndex: number = 0, month: number) => {
         try {
             setLoading(true);
             const perPage = 10;
             const offset = pageIndex * perPage;
 
-            const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
-            const endOfMonth = new Date(new Date(new Date().setMonth(new Date().getMonth() + 1)).setDate(0))
-                .toISOString()
-                .split("T")[0];
+            const startOfMonth = new Date(new Date().getFullYear(), month - 1, 1).toISOString().split("T")[0];
+            const endOfMonth = new Date(new Date().getFullYear(), month, 0).toISOString().split("T")[0];
 
             const { count: totalScalesCount, error: totalError } = await supabase
                 .from("escala")
                 .select("*", { count: "exact", head: true })
                 .eq("paciente_id", paciente_id)
                 .gte("data", startOfMonth)
-                .lte("data", endOfMonth);;
+                .lte("data", endOfMonth);
 
             if (totalError) {
                 console.error("Erro ao buscar contagem de escalas:", totalError);
@@ -96,12 +103,17 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
 
     useEffect(() => {
         if (patient?.paciente_id) {
-            fetchPatientScales(patient.paciente_id, pageIndex);
+            fetchPatientScales(patient.paciente_id, pageIndex, selectedMonth);
         }
-    }, [patient, pageIndex]);
+    }, [patient, pageIndex, selectedMonth]);
 
     const handlePageChange = (newPageIndex: number) => {
         setPageIndex(newPageIndex);
+    };
+
+    const handleMonthChange = (value: string) => {
+        setSelectedMonth(parseInt(value, 10));
+        setPageIndex(0);
     };
 
     const handleEditClick = (escala_id: number, scale: Scale) => {
@@ -129,7 +141,7 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
             if (error) throw error;
 
             setEditingRow(null);
-            fetchPatientScales(patient.paciente_id, pageIndex); // Atualiza os dados
+            fetchPatientScales(patient.paciente_id, pageIndex, selectedMonth);
         } catch (error) {
             console.error("Erro ao salvar alterações:", error);
         }
@@ -145,7 +157,7 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
 
             if (error) throw error;
 
-            fetchPatientScales(patient.paciente_id, pageIndex); // Atualiza os dados
+            fetchPatientScales(patient.paciente_id, pageIndex, selectedMonth);
         } catch (error) {
             console.error("Erro ao excluir escala:", error);
         }
@@ -174,6 +186,21 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                 <DialogTitle>Escalas do Paciente: {patient.nome}</DialogTitle>
                 <DialogDescription>Status: {patient.status}</DialogDescription>
             </DialogHeader>
+            <div className="flex items-center mb-4 gap-3">
+                <h2 className="text-lg font-semibold">Filtrar por mês:</h2>
+                <Select onValueChange={handleMonthChange} defaultValue={selectedMonth.toString()}>
+                    <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Selecione o mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {months.map((month) => (
+                            <SelectItem key={month.value} value={month.value} className="cursor-pointer">
+                                {month.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="w-full h-[625px] shadow-lg border rounded-md my-4 ">
                 <Table>
                     <TableHeader className="text-center">
