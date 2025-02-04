@@ -185,7 +185,7 @@ export const CollaboratorDetails = ({ collaborator, }: { collaborator: Collabora
                             <TableRow>
                                 <TableCell className="font-semibold">Telefone:</TableCell>
                                 <TableCell className="flex justify-start -mt-2">
-                                    <Input id="telefone" type="text" {...register("cpf")} />
+                                    <Input id="telefone" type="text" {...register("telefone")} />
                                 </TableCell>
                             </TableRow>
                             <TableRow>
