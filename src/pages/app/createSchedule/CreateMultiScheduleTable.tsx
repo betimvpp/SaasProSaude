@@ -384,7 +384,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                 <SelectContent>
                                     <SelectItem value="SD">SD</SelectItem>
                                     <SelectItem value="SN">SN</SelectItem>
-                                    <SelectItem value="P">P</SelectItem>
+                                    <SelectItem value="PT">PT</SelectItem>
                                     {/* <SelectItem value="M">M</SelectItem>
                                     <SelectItem value="T">T</SelectItem>
                                     <SelectItem value="GR">GR</SelectItem> */}
