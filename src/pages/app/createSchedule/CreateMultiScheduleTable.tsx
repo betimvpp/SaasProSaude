@@ -45,6 +45,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
 
     const handleDateSelection = (range: DateRange | undefined) => {
         if (!range?.from && !range?.to) {
+            setCompletedSchedules([])
             setSelectedData(undefined);
         } else {
             setSelectedData(range);
@@ -113,7 +114,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
         const dateRange = eachDayOfInterval({ start: selectedData.from, end: selectedData.to });
         const newSchedules: Scale[] = [];
 
-        if (selectedServiceType === "P") {
+        if (selectedServiceType === "PT") {
             dateRange.forEach((date, index) => {
                 const collaborator = selectedCollaborators[index % selectedCollaborators.length];
 
@@ -160,11 +161,12 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
             });
         }
 
-        setCompletedSchedules((prev) => {
-            const existingDates = dateRange.map(date => format(date, 'yyyy-MM-dd'));
-            const filteredSchedules = prev.filter(schedule => !existingDates.includes(schedule.data));
-            return [...filteredSchedules, ...newSchedules];
-        });
+        // setCompletedSchedules((prev) => {
+        //     const existingDates = dateRange.map(date => format(date, 'yyyy-MM-dd'));
+        //     const filteredSchedules = prev.filter(schedule => !existingDates.includes(schedule.data));
+        //     return [...filteredSchedules, ...newSchedules];
+        // });
+        setCompletedSchedules(newSchedules)
     };
 
     const handleComplete = () => {
@@ -241,7 +243,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
             <Table>
                 <TableBody className="grid grid-cols-6">
                     {/* Data */}
-                    <TableRow className='row-span-10 col-span-2 flex flex-col items-center justify-center text-start'>
+                    <TableRow className='row-span-10 col-span-2 flex flex-col items-start justify-start text-start'>
                         <TableCell className="font-semibold w-full text-start ">Data do Serviço:</TableCell>
                         <TableCell className="flex justify-start -mt-2">
                             <DayPicker
@@ -326,7 +328,7 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     </TableRow>
 
                     {/* Nome do Colaborador */}
-                    <TableRow className='col-span'>
+                    <TableRow className='col-span-2'>
                         <TableCell className="font-semibold">Nome do Colaborador:</TableCell>
                         <TableCell className="flex justify-start -mt-2">
                             <Select
@@ -391,18 +393,6 @@ export const CreateMultiScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                 </SelectContent>
                             </Select>
                         </TableCell>
-                    </TableRow>
-
-                    {/* Horario GR */}
-                    <TableRow>
-                        {selectedServiceType === 'GR' && (
-                            <>
-                                <TableCell className="font-semibold">Horário:</TableCell>
-                                <TableCell className="flex justify-start -mt-2">
-                                    <Input type="time" {...register('horario_gerenciamento')} placeholder="Informe o horário" />
-                                </TableCell>
-                            </>
-                        )}
                     </TableRow>
 
                     <TableRow>

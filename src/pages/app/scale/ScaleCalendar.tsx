@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "dayjs/locale/pt-br";
@@ -17,7 +17,7 @@ export const ScaleCalendar = () => {
     const [loading, setLoading] = useState(false);
     const today = dayjs();
 
-    const { fetchScales, fetchScalesNotPaginated, scaleCountsByDate } = useScale();
+    const { fetchScales, fetchScalesNotPaginated, scaleCountsByDate, scalesNotPaginated } = useScale();
 
     const handlePreviousMonth = () => setCurrentDate(currentDate.subtract(1, "month"));
     const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
@@ -39,6 +39,10 @@ export const ScaleCalendar = () => {
         setSelectedDate(null);
         fetchScalesNotPaginated();
     };
+
+    useEffect(() => {
+        fetchScalesNotPaginated({ data: currentDate.format("YYYY-MM") });
+    }, [currentDate])
 
     return (
         <div className="p-4 w-full h-full m-auto">
