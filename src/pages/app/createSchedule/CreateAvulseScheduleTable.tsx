@@ -21,7 +21,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     const [searchValue, setSearchValue] = useState('');
     const [collaboratorSearchValue, setCollaboratorSearchValue] = useState('');
     const [selectedServiceType, setSelectedServiceType] = useState<string>('');
-    const [selectedData, setSelectedData] = useState<Date>();
+    const [selectedData, setSelectedData] = useState<Date[]>([]);
     const [selectedCollaboratorId, setSelectedCollaboratorId] = useState<string | null>(null);
     const [completedSchedules, setCompletedSchedules] = useState<Scale[]>([])
 
@@ -58,7 +58,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
     };
 
     const generateSingleSchedule = async () => {
-        if (!selectedData || !selectedServiceType || !selectedCollaboratorId || !watch('paciente_id')) {
+        if (selectedData.length === 0 || !selectedServiceType || !selectedCollaboratorId || !watch('paciente_id')) {
             toast.error("Por favor, preencha todos os campos obrigatórios.");
             return;
         }
@@ -69,49 +69,55 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
             return;
         }
 
-        const newSchedule: Scale = {
-            data: format(selectedData, 'yyyy-MM-dd'),
-            paciente_id: watch('paciente_id'),
-            funcionario_id: selectedCollaboratorId,
-            valor_recebido: watch('valor_recebido') || 0,
-            valor_pago: watch('valor_pago') || 0,
-            tipo_servico: selectedServiceType,
-            pagamentoAR_AV: pagamentoAR_AV,
-            horario_gerenciamento: selectedServiceType === 'GR' ? watch('horario_gerenciamento') : null,
-        };
+        // Criar escalas para todas as datas selecionadas
+        for (const date of selectedData) {
+            const newSchedule: Scale = {
+                data: format(date, 'yyyy-MM-dd'),
+                paciente_id: watch('paciente_id'),
+                funcionario_id: selectedCollaboratorId,
+                valor_recebido: watch('valor_recebido') || 0,
+                valor_pago: watch('valor_pago') || 0,
+                tipo_servico: selectedServiceType,
+                pagamentoAR_AV: pagamentoAR_AV,
+                horario_gerenciamento: selectedServiceType === 'GR' ? watch('horario_gerenciamento') : null,
+            };
 
-        const isDuplicate = completedSchedules.some(
-            (schedule) =>
-                schedule.data === newSchedule.data &&
-                schedule.funcionario_id === newSchedule.funcionario_id
-        );
+            const isDuplicate = completedSchedules.some(
+                (schedule) =>
+                    schedule.data === newSchedule.data &&
+                    schedule.funcionario_id === newSchedule.funcionario_id
+            );
 
-        if (isDuplicate && selectedServiceType !== "GR") {
-            toast.error("Já existe uma escala para este colaborador nesta data.");
-            return;
-        }
-
-        try {
-            // Salvar no banco de dados
-            const { error } = await supabase
-                .from('escala')
-                .insert(newSchedule);
-
-            if (error) {
-                console.error(error);
-                toast.error("Erro ao salvar a escala no banco de dados.");
-                return;
+            if (isDuplicate && selectedServiceType !== "GR") {
+                toast.error(`Já existe uma escala para este colaborador na data ${format(date, 'dd/MM/yyyy')}.`);
+                continue;
             }
 
-            // Atualizar a lista local após sucesso
-            setCompletedSchedules((prevSchedules) => [...prevSchedules, newSchedule]);
+            try {
+                // Salvar no banco de dados
+                const { error } = await supabase
+                    .from('escala')
+                    .insert(newSchedule);
 
-            // Feedback de sucesso
-            toast.success("Escala adicionada com sucesso!");
-        } catch (err) {
-            console.error(err);
-            toast.error("Erro ao processar a escala.");
+                if (error) {
+                    console.error(error);
+                    toast.error(`Erro ao salvar a escala para ${format(date, 'dd/MM/yyyy')} no banco de dados.`);
+                    continue;
+                }
+
+                // Atualizar a lista local após sucesso
+                setCompletedSchedules((prevSchedules) => [...prevSchedules, newSchedule]);
+            } catch (err) {
+                console.error(err);
+                toast.error(`Erro ao processar a escala para ${format(date, 'dd/MM/yyyy')}.`);
+            }
         }
+
+        // Feedback de sucesso
+        toast.success(`Escalas criadas com sucesso para ${selectedData.length} data(s)!`);
+        
+        // Limpar as datas selecionadas após criar as escalas
+        setSelectedData([]);
     };
 
     const handleComplete = () => {
@@ -135,18 +141,33 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                     {/* Data */}
                     <TableRow className='row-span-10 col-span-2 flex flex-col items-center justify-center text-start'>
                         <TableCell className="font-semibold w-full text-start ">Data do Serviço:</TableCell>
-                        <TableCell className="flex justify-start -mt-2">
+                        <TableCell className="flex flex-col justify-start -mt-2">
                             <DayPicker
                                 locale={ptBR}
-                                mode="single"
+                                mode="multiple"
                                 selected={selectedData}
-                                onSelect={setSelectedData}
+                                onSelect={(dates) => setSelectedData(dates || [])}
                                 classNames={{
                                     selected: `bg-primary rounded-full font-bold`,
                                     chevron: `text-primary`,
                                     day_button: `border-none`,
                                 }}
                             />
+                            {selectedData.length > 0 && (
+                                <div className="mt-2 p-2 bg-gray-50 rounded-md">
+                                    <p className="text-sm font-medium text-gray-700 mb-1">Datas selecionadas:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                        {selectedData.map((date, index) => (
+                                            <span
+                                                key={index}
+                                                className="inline-block px-2 py-1 text-xs bg-primary text-white rounded-md"
+                                            >
+                                                {format(date, 'dd/MM/yyyy')}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </TableCell>
                     </TableRow>
 
@@ -302,7 +323,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                 onClick={handleComplete}
                                 className="mt-4 bg-primary text-white px-4 py-2 rounded"
                             >
-                                Criar Escala
+                                Criar Escala{selectedData.length > 1 ? 's' : ''}
                             </Button>
                         </TableCell>
                     </TableRow>
