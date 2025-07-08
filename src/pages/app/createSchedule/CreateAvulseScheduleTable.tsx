@@ -241,15 +241,7 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     >
                                         Fins de Semana
                                     </Button>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setSelectedData([])}
-                                        className="text-xs"
-                                    >
-                                        Limpar
-                                    </Button>
+
                                 </div>
                                 <div className="flex flex-wrap gap-1">
                                     <Button
@@ -565,6 +557,15 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                         className="text-xs"
                                     >
                                         Domingo
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => setSelectedData([])}
+                                        className="text-xs"
+                                    >
+                                        Limpar
                                     </Button>
                                 </div>
                                 {selectedData.length > 0 && (
