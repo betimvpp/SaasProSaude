@@ -153,21 +153,436 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     day_button: `border-none`,
                                 }}
                             />
-                            {selectedData.length > 0 && (
-                                <div className="mt-2 p-2 bg-gray-50 rounded-md">
-                                    <p className="text-sm font-medium text-gray-700 mb-1">Datas selecionadas:</p>
-                                    <div className="flex flex-wrap gap-1">
-                                        {selectedData.map((date, index) => (
-                                            <span
-                                                key={index}
-                                                className="inline-block px-2 py-1 text-xs bg-primary text-white rounded-md"
-                                            >
-                                                {format(date, 'dd/MM/yyyy')}
-                                            </span>
-                                        ))}
-                                    </div>
+                            <div className="mt-2 space-y-2">
+                                <div className="flex flex-wrap gap-1">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const evenDays = [];
+                                            for (let day = 2; day <= daysInMonth; day += 2) {
+                                                evenDays.push(new Date(currentYear, currentMonth, day));
+                                            }
+                                            setSelectedData(evenDays);
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Dias Pares
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const oddDays = [];
+                                            for (let day = 1; day <= daysInMonth; day += 2) {
+                                                oddDays.push(new Date(currentYear, currentMonth, day));
+                                            }
+                                            setSelectedData(oddDays);
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Dias Ímpares
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const weekdays = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() >= 1 && date.getDay() <= 5) { // Segunda a Sexta
+                                                    weekdays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(weekdays);
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Dias Úteis
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const weekends = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 0 || date.getDay() === 6) { // Sábado e Domingo
+                                                    weekends.push(date);
+                                                }
+                                            }
+                                            setSelectedData(weekends);
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Fins de Semana
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setSelectedData([])}
+                                        className="text-xs"
+                                    >
+                                        Limpar
+                                    </Button>
                                 </div>
-                            )}
+                                <div className="flex flex-wrap gap-1">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const mondays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 1) { // Segunda-feira
+                                                    mondays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                // Verifica se todas as segundas já estão selecionadas
+                                                const allMondaysSelected = mondays.every(monday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === monday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allMondaysSelected) {
+                                                    // Se todas estão selecionadas, remove todas as segundas
+                                                    return prev.filter(date => 
+                                                        !mondays.some(monday => 
+                                                            monday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    // Se não estão todas selecionadas, adiciona as que faltam
+                                                    const mondaysToAdd = mondays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...mondaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Segunda
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const tuesdays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 2) { // Terça-feira
+                                                    tuesdays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                // Verifica se todas as terças já estão selecionadas
+                                                const allTuesdaysSelected = tuesdays.every(tuesday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === tuesday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allTuesdaysSelected) {
+                                                    // Se todas estão selecionadas, remove todas as terças
+                                                    return prev.filter(date => 
+                                                        !tuesdays.some(tuesday => 
+                                                            tuesday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    // Se não estão todas selecionadas, adiciona as que faltam
+                                                    const tuesdaysToAdd = tuesdays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...tuesdaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Terça
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const wednesdays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 3) { // Quarta-feira
+                                                    wednesdays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                const allWednesdaysSelected = wednesdays.every(wednesday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === wednesday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allWednesdaysSelected) {
+                                                    return prev.filter(date => 
+                                                        !wednesdays.some(wednesday => 
+                                                            wednesday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    const wednesdaysToAdd = wednesdays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...wednesdaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Quarta
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const thursdays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 4) { // Quinta-feira
+                                                    thursdays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                const allThursdaysSelected = thursdays.every(thursday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === thursday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allThursdaysSelected) {
+                                                    return prev.filter(date => 
+                                                        !thursdays.some(thursday => 
+                                                            thursday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    const thursdaysToAdd = thursdays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...thursdaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Quinta
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const fridays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 5) { // Sexta-feira
+                                                    fridays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                const allFridaysSelected = fridays.every(friday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === friday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allFridaysSelected) {
+                                                    return prev.filter(date => 
+                                                        !fridays.some(friday => 
+                                                            friday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    const fridaysToAdd = fridays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...fridaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Sexta
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const saturdays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 6) { // Sábado
+                                                    saturdays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                const allSaturdaysSelected = saturdays.every(saturday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === saturday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allSaturdaysSelected) {
+                                                    return prev.filter(date => 
+                                                        !saturdays.some(saturday => 
+                                                            saturday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    const saturdaysToAdd = saturdays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...saturdaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Sábado
+                                    </Button>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                            const today = new Date();
+                                            const currentMonth = today.getMonth();
+                                            const currentYear = today.getFullYear();
+                                            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                                            
+                                            const sundays: Date[] = [];
+                                            for (let day = 1; day <= daysInMonth; day++) {
+                                                const date = new Date(currentYear, currentMonth, day);
+                                                if (date.getDay() === 0) { // Domingo
+                                                    sundays.push(date);
+                                                }
+                                            }
+                                            setSelectedData(prev => {
+                                                const allSundaysSelected = sundays.every(sunday => 
+                                                    prev.some(existingDate => 
+                                                        existingDate.getTime() === sunday.getTime()
+                                                    )
+                                                );
+                                                
+                                                if (allSundaysSelected) {
+                                                    return prev.filter(date => 
+                                                        !sundays.some(sunday => 
+                                                            sunday.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                } else {
+                                                    const sundaysToAdd = sundays.filter(date => 
+                                                        !prev.some(existingDate => 
+                                                            existingDate.getTime() === date.getTime()
+                                                        )
+                                                    );
+                                                    return [...prev, ...sundaysToAdd];
+                                                }
+                                            });
+                                        }}
+                                        className="text-xs"
+                                    >
+                                        Domingo
+                                    </Button>
+                                </div>
+                                {selectedData.length > 0 && (
+                                    <div className="p-2 bg-gray-50 rounded-md">
+                                        <p className="text-sm font-medium text-gray-700 mb-1">Datas selecionadas:</p>
+                                        <div className="flex flex-wrap gap-1">
+                                            {selectedData.map((date, index) => (
+                                                <span
+                                                    key={index}
+                                                    className="inline-block px-2 py-1 text-xs bg-primary text-white rounded-md"
+                                                >
+                                                    {format(date, 'dd/MM/yyyy')}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </TableCell>
                     </TableRow>
 
