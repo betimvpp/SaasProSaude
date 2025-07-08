@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "dayjs/locale/pt-br";
@@ -17,7 +17,7 @@ export const ScaleCalendar = () => {
     const [loading, setLoading] = useState(false);
     const today = dayjs();
 
-    const { scales, fetchScales, scaleCountsByDate } = useScale();
+    const { fetchScales, fetchScalesNotPaginated, scaleCountsByDate, scalesNotPaginated } = useScale();
 
     const handlePreviousMonth = () => setCurrentDate(currentDate.subtract(1, "month"));
     const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));
@@ -30,9 +30,19 @@ export const ScaleCalendar = () => {
         const date = currentDate.date(day);
         setSelectedDate(date);
         setLoading(true);
+        await fetchScalesNotPaginated({ data: date.format("YYYY-MM-DD") });
         await fetchScales({ data: date.format("YYYY-MM-DD") });
         setLoading(false);
     };
+
+    const handleCloseDialog = () => {
+        setSelectedDate(null);
+        fetchScalesNotPaginated();
+    };
+
+    useEffect(() => {
+        fetchScalesNotPaginated({ data: currentDate.format("YYYY-MM") });
+    }, [currentDate])
 
     return (
         <div className="p-4 w-full h-full m-auto">
@@ -64,7 +74,7 @@ export const ScaleCalendar = () => {
                     const isPastDay = currentDate.date(day).isBefore(today, "day");
                     return (
                         <div key={day} className={`p-2 h-full rounded shadow-md ${isPastDay ? "bg-secondary opacity-30" : "bg-secondary"}`}>
-                            <Dialog >
+                            <Dialog onOpenChange={(open) => !open && handleCloseDialog()}>
                                 <DialogTrigger asChild>
                                     <Button
                                         variant="ghost"
@@ -82,7 +92,6 @@ export const ScaleCalendar = () => {
                                 {selectedDate && (
                                     <ScaleCalendarDetails
                                         date={selectedDate}
-                                        scales={scales}
                                         loading={loading}
                                     />
                                 )}

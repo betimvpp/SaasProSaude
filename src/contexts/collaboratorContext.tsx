@@ -234,7 +234,7 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
                     }
                 }
             }
-            toast.success("Colaborador adicionado com sucesso!");
+            toast.success("Colaborador atualizado com sucesso!");
         } catch (error) {
             console.error('Erro inesperado ao atualizar colaborador:', error);
             toast.error("Falha ao adicionar colaborador!");

@@ -19,6 +19,7 @@ import { ResetPassword } from '@/pages/login/ResetPassword'
 import NotificationForm from '@/pages/app/notifications/NotificationForm'
 import { Produtividade } from '@/pages/app/produtividade/produtividade'
 
+import { ContactPage } from '@/pages/app/contactPage/ContactPage'
 
 export const router = createBrowserRouter([
   {
@@ -99,7 +100,12 @@ export const router = createBrowserRouter([
           <ProtectedRoute allowedRoles={['admin', 'rh']}>
             <Produtividade />
           </ProtectedRoute>
+
       },
+      {
+        path: '/paginaDeContato', element:
+          <ContactPage />
+      }
     ],
   },
   {

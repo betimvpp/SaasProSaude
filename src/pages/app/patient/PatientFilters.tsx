@@ -42,11 +42,6 @@ export function PatientFilters() {
         className="flex items-center gap-2"
       >
         <span className="text-sm font-semibold">Filtros:</span>
-        {/* <Input
-          placeholder="ID do Paciente"
-          className="h-8 w-auto"
-          {...register('patientId')}
-        /> */}
         <Input
           placeholder="Nome do Paciente"
           className="h-8 w-[320px]"

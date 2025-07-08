@@ -1,20 +1,11 @@
 import { TableRow, TableCell } from '@/components/ui/table'
-import { useAuth } from '@/contexts/authContext';
-import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
 import { Scale } from '@/contexts/scaleContext'
-import { useEffect, useState } from 'react';
 
-export const ScaleCalendarDetailsRow = ({ scale }: { scale: Scale }) => {
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-
-    useEffect(() => {
-        if (user) {
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-        }
-    }, [user, getCollaboratorById]);
+interface ScaleCalendarDetailsRowProps {
+    scale: Scale;
+    isAdmin: boolean;
+}
+export const ScaleCalendarDetailsRow = ({ scale, isAdmin }: ScaleCalendarDetailsRowProps) => {
 
     const getServiceTime = (tipoServico: string, defaultHorario: string) => {
         switch (tipoServico) {
@@ -39,7 +30,7 @@ export const ScaleCalendarDetailsRow = ({ scale }: { scale: Scale }) => {
             <TableCell>{scale?.nomeFuncionario}</TableCell>
             <TableCell>{scale?.nomePaciente}</TableCell>
             <TableCell>{scale?.data}</TableCell>
-            {collaboratorData?.role === 'admin' ? <TableCell className="text-center font-semibold">{scale?.valor_recebido}</TableCell> : <></>}
+            {isAdmin && <TableCell>{scale?.valor_recebido}</TableCell>}
             <TableCell className="text-center font-semibold">{scale?.valor_pago}</TableCell>
             <TableCell>{scale?.pagamentoAR_AV}</TableCell>
             <TableCell>

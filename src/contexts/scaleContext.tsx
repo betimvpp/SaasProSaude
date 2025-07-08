@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import supabase from '@/lib/supabase';
+import dayjs from "dayjs";
 
 export const scaleSchema = z.object({
     escala_id: z.number().optional().nullable(),
@@ -115,6 +116,9 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
     const [serviceExchangesNotPaginated, setServiceExchangesNotPaginated] = useState<ServiceExchange[]>([]);
     const [loading, setLoading] = useState(true);
     const [scaleCountsByDate, setScaleCountsByDate] = useState<Record<string, number>>({});
+    const [monthlyCache, setMonthlyCache] = useState<
+        Record<string, { scales: Scale[]; counts: Record<string, number> }>
+    >({});
 
     const fetchScales = useCallback(async (filters: ScaleFiltersSchema = {}, pageIndex: number = 0) => {
         setLoading(true);
@@ -164,59 +168,192 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    const fetchScalesNotPaginated = useCallback(async (filters: ScaleFiltersSchema = {}) => {
-        setLoading(true);
+    // const fetchScalesNotPaginated = useCallback(async (filters: ScaleFiltersSchema = {}) => {
+    //     setLoading(true);
 
-        let query = supabase
-            .from('escala')
-            .select(`*
-                ,funcionario:funcionario_id (nome),
-                paciente:paciente_id (nome)`);
+    //     let query = supabase
+    //         .from('escala')
+    //         .select(`*
+    //             ,funcionario:funcionario_id (nome),
+    //             paciente:paciente_id (nome)`);
 
-        if (filters.pacienteId) {
-            query = query.eq('paciente_id', filters.pacienteId);
-        }
-        if (filters.funcionarioId) {
-            query = query.eq('funcionario_id', filters.funcionarioId);
-        }
-        if (filters.data) {
-            query = query.eq('data', filters.data);
-        }
-        if (filters.tipoServico) {
-            query = query.ilike('tipo_servico', `%${filters.tipoServico}%`);
-        }
+    //     if (filters.pacienteId) {
+    //         query = query.eq('paciente_id', filters.pacienteId);
+    //     }
+    //     if (filters.funcionarioId) {
+    //         query = query.eq('funcionario_id', filters.funcionarioId);
+    //     }
+    //     if (filters.data) {
+    //         query = query.eq('data', filters.data);
+    //     }
+    //     if (filters.tipoServico) {
+    //         query = query.ilike('tipo_servico', `%${filters.tipoServico}%`);
+    //     }
 
-        const { data: escalas, error } = await query;
+    //     const { data: escalas, error } = await query;
 
-        if (error) {
-            console.error('Erro ao buscar dados de escalas:', error);
-            setLoading(false);
-            return;
-        }
+    //     if (error) {
+    //         console.error('Erro ao buscar dados de escalas:', error);
+    //         setLoading(false);
+    //         return;
+    //     }
 
-        if (escalas) {
-            const parsedData = escalas.map((item) => scaleSchema.safeParse({
-                ...item,
-                nomeFuncionario: item.funcionario?.nome || null,
-                nomePaciente: item.paciente?.nome || null,
-            }));
+    //     if (escalas) {
+    //         const parsedData = escalas.map((item) => scaleSchema.safeParse({
+    //             ...item,
+    //             nomeFuncionario: item.funcionario?.nome || null,
+    //             nomePaciente: item.paciente?.nome || null,
+    //         }));
 
-            const validScales = parsedData
-                .filter((item) => item.success)
-                .map((item) => item.data);
+    //         const validScales = parsedData
+    //             .filter((item) => item.success)
+    //             .map((item) => item.data);
+
+    //         setScalesNotPaginated(validScales);
+
+    //         const counts: Record<string, number> = {};
+    //         validScales.forEach((scale) => {
+    //             const date = scale.data;
+    //             counts[date] = (counts[date] || 0) + 1;
+    //         });
+    //         setScaleCountsByDate(counts);
+    //     }
+
+    //     setLoading(false);
+    // }, []);
+    const fetchScalesNotPaginated = useCallback(
+        async (filters: ScaleFiltersSchema = {}) => {
+            setLoading(true);
+
+            // Detecta se data é mês (formato "YYYY-MM")
+            const monthKey =
+                filters.data && /^\d{4}-\d{2}$/.test(filters.data)
+                    ? filters.data
+                    : null;
+
+            if (monthKey) {
+                // --- caso MÊS: usa cache ou consulta intervalo
+                if (monthlyCache[monthKey]) {
+                    const { scales, counts } = monthlyCache[monthKey];
+                    setScalesNotPaginated(scales);
+                    setScaleCountsByDate(counts);
+                    setLoading(false);
+                    return;
+                }
+
+                const start = `${monthKey}-01`;
+                const end = dayjs(start).endOf("month").format("YYYY-MM-DD");
+
+                let query = supabase
+                    .from("escala")
+                    .select(`
+                *,
+                funcionario:funcionario_id (nome),
+                paciente:paciente_id (nome)
+              `)
+                    .gte("data", start)
+                    .lte("data", end);
+
+                // aplica demais filtros, exceto 'data'
+                if (filters.pacienteId) {
+                    query = query.eq("paciente_id", filters.pacienteId);
+                }
+                if (filters.funcionarioId) {
+                    query = query.eq("funcionario_id", filters.funcionarioId);
+                }
+                if (filters.tipoServico) {
+                    query = query.ilike("tipo_servico", `%${filters.tipoServico}%`);
+                }
+
+                const { data: escalas, error } = await query;
+                if (error) {
+                    console.error("Erro ao buscar escalas do mês:", error);
+                    setLoading(false);
+                    return;
+                }
+
+                // valida e mapeia
+                const validScales = (escalas ?? [])
+                    .map((item) =>
+                        scaleSchema.safeParse({
+                            ...item,
+                            nomeFuncionario: item.funcionario?.nome || null,
+                            nomePaciente: item.paciente?.nome || null,
+                        })
+                    )
+                    .filter((r) => r.success)
+                    .map((r) => r.data);
+
+                // monta contagens por dia
+                const counts: Record<string, number> = {};
+                validScales.forEach((s) => {
+                    counts[s.data] = (counts[s.data] || 0) + 1;
+                });
+
+                // atualiza estado e cache
+                setScalesNotPaginated(validScales);
+                setScaleCountsByDate(counts);
+                setMonthlyCache((prev) => ({
+                    ...prev,
+                    [monthKey]: { scales: validScales, counts },
+                }));
+
+                setLoading(false);
+                return;
+            }
+
+            // --- caso DATA exata (ou sem filtro): comportamento original
+            let query = supabase
+                .from("escala")
+                .select(`
+              *,
+              funcionario:funcionario_id (nome),
+              paciente:paciente_id (nome)
+            `);
+
+            if (filters.pacienteId) {
+                query = query.eq("paciente_id", filters.pacienteId);
+            }
+            if (filters.funcionarioId) {
+                query = query.eq("funcionario_id", filters.funcionarioId);
+            }
+            if (filters.data) {
+                query = query.eq("data", filters.data);
+            }
+            if (filters.tipoServico) {
+                query = query.ilike("tipo_servico", `%${filters.tipoServico}%`);
+            }
+
+            const { data: escalas, error } = await query;
+            if (error) {
+                console.error("Erro ao buscar dados de escalas:", error);
+                setLoading(false);
+                return;
+            }
+
+            const validScales = (escalas ?? [])
+                .map((item) =>
+                    scaleSchema.safeParse({
+                        ...item,
+                        nomeFuncionario: item.funcionario?.nome || null,
+                        nomePaciente: item.paciente?.nome || null,
+                    })
+                )
+                .filter((r) => r.success)
+                .map((r) => r.data);
+
+            // contagens por data exata (útil se veio filters.data)
+            const counts: Record<string, number> = {};
+            validScales.forEach((s) => {
+                counts[s.data] = (counts[s.data] || 0) + 1;
+            });
 
             setScalesNotPaginated(validScales);
-
-            const counts: Record<string, number> = {};
-            validScales.forEach((scale) => {
-                const date = scale.data;
-                counts[date] = (counts[date] || 0) + 1;
-            });
             setScaleCountsByDate(counts);
-        }
-
-        setLoading(false);
-    }, []);
+            setLoading(false);
+        },
+        [monthlyCache]
+    );
 
     const fetchServiceExchanges = useCallback(async (filters: ServiceExchangeFiltersSchema = {}, pageIndex: number = 0) => {
         setLoading(true);
@@ -408,8 +545,6 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         const fetchData = async () => {
-            await fetchScales();
-            await fetchScalesNotPaginated();
             await fetchServiceExchanges();
             await fetchServiceExchangesNotPaginated();
         };

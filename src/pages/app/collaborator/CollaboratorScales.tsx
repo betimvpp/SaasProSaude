@@ -5,12 +5,25 @@ import { TableHeader, TableRow, TableHead, TableBody, Table, TableCell, } from "
 import { Collaborator } from "@/contexts/collaboratorContext";
 import { Scale } from "@/contexts/scaleContext";
 import supabase from "@/lib/supabase";
-// import { CollaboratorTableSkeleton } from "./CollaboratorTableSkeleton";
 import { Button } from "@/components/ui/button";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+const months = [
+    { value: "1", label: "Janeiro" },
+    { value: "2", label: "Fevereiro" },
+    { value: "3", label: "Março" },
+    { value: "4", label: "Abril" },
+    { value: "5", label: "Maio" },
+    { value: "6", label: "Junho" },
+    { value: "7", label: "Julho" },
+    { value: "8", label: "Agosto" },
+    { value: "9", label: "Setembro" },
+    { value: "10", label: "Outubro" },
+    { value: "11", label: "Novembro" },
+    { value: "12", label: "Dezembro" },
+];
 
 export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { collaborator: Collaborator; isAdmin: string; isLoading: boolean; }) => {
     const [scales, setCollaboratorScalesData] = useState<Scale[]>([]);
@@ -18,23 +31,17 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
     const [totalCount, setTotalScalesCount] = useState(0);
     const [pageIndex, setPageIndex] = useState(0);
     const [editingRow, setEditingRow] = useState<number | null>(null);
-    const [editedValues, setEditedValues] = useState<{
-        valor_pago: string;
-        pagamentoAR_AV: string;
-        valor_recebido: string;
-        tipo_servico: string;
-    }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
+    const [editedValues, setEditedValues] = useState<{ valor_pago: string; pagamentoAR_AV: string; valor_recebido: string; tipo_servico: string; }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
-    const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0) => {
+    const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0, month: number) => {
         try {
             setLoading(true);
             const perPage = 10;
             const offset = pageIndex * perPage;
 
-            const startOfMonth = new Date(new Date().setDate(1)).toISOString().split("T")[0];
-            const endOfMonth = new Date(new Date(new Date().setMonth(new Date().getMonth() + 1)).setDate(0))
-                .toISOString()
-                .split("T")[0];
+            const startOfMonth = new Date(new Date().getFullYear(), month - 1, 1).toISOString().split("T")[0];
+            const endOfMonth = new Date(new Date().getFullYear(), month, 0).toISOString().split("T")[0];
 
             const { count: totalScalesCount, error: totalError } = await supabase
                 .from("escala")
@@ -94,14 +101,20 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
         }
     }, []);
 
+
     useEffect(() => {
         if (collaborator?.funcionario_id) {
-            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex);
+            fetchCollaboratorScales(collaborator.funcionario_id, pageIndex, selectedMonth);
         }
-    }, [collaborator, pageIndex]);
+    }, [collaborator, pageIndex, selectedMonth]);
 
     const handlePageChange = (newPageIndex: number) => {
         setPageIndex(newPageIndex);
+    };
+
+    const handleMonthChange = (value: string) => {
+        setSelectedMonth(parseInt(value, 10));
+        setPageIndex(0);
     };
 
     const handleEditClick = (escala_id: number, scale: Scale) => {
@@ -129,7 +142,7 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
             if (error) throw error;
 
             setEditingRow(null);
-            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex); // Atualiza os dados
+            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex, selectedMonth); // Atualiza os dados
         } catch (error) {
             console.error("Erro ao salvar alterações:", error);
         }
@@ -145,7 +158,7 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
             if (error) throw error;
 
-            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex);
+            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex, selectedMonth);
         } catch (error) {
             console.error("Erro ao excluir escala:", error);
         }
@@ -174,6 +187,21 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                 <DialogTitle>Escalas do Colaborador: {collaborator.nome}</DialogTitle>
                 <DialogDescription>Status: {collaborator.status}</DialogDescription>
             </DialogHeader>
+            <div className="flex items-center mb-4 gap-3">
+                <h2 className="text-lg font-semibold">Filtrar por mês:</h2>
+                <Select onValueChange={handleMonthChange} defaultValue={selectedMonth.toString()}>
+                    <SelectTrigger className="w-40">
+                        <SelectValue placeholder="Selecione o mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {months.map((month) => (
+                            <SelectItem key={month.value} value={month.value} className="cursor-pointer">
+                                {month.label}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="w-full h-[625px] shadow-lg border rounded-md my-4 ">
                 <Table>
                     <TableHeader className="text-center">
@@ -323,7 +351,6 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                             ))}
                         </TableBody>
                     }
-                    {/* {loading === true && scales.length <= 0 && <CollaboratorTableSkeleton />} */}
                 </Table>
                 {loading && <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Carregando Escalas</div>}
                 {!loading && scales.length <= 0 && <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhuma escala encontrado!</div>}
