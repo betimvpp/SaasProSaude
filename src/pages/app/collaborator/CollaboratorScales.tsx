@@ -177,7 +177,8 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
         try {
             const escalaIds = selectedScales.map(scale => scale.escala_id!);
             for (const escala_id of escalaIds) {
-                console.log( "escala_id: ", escala_id);
+                const { error } = await supabase.from("escala").delete().eq("escala_id", escala_id);
+                if (error) throw error;
             }
 
             setSelectedScales([]);
