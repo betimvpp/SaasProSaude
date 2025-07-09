@@ -1,15 +1,13 @@
 import supabase from "@/lib/supabase";
-import { set } from "date-fns";
-
 import { useContext, createContext, ReactNode, useState, useCallback } from "react";
 import { z } from "zod";
 
-export const cidadeDeAtuacaoSchmea = z.object({
+export const atuationCity = z.object({
     id: z.number(),
     cidade: z.string(),
 });
 
-export const ProdutividadeSchema = z.object({
+export const ProdutivitySchema = z.object({
     paciente_id: z.string().uuid("ID do paciente deve ser um UUID válido"),
     nome_paciente: z.string().min(1, "O nome do paciente é obrigatório"),
     cidade: z.string().min(1, "A cidade é obrigatória"),
@@ -24,7 +22,7 @@ export const ProdutividadeSchema = z.object({
     G: z.number().nonnegative().default(0),
 });
 
-export const EscalaSchema = z.object({
+export const ScheduleSchema = z.object({
     escala_id: z.number().int('ID da escala deve ser um número inteiro'),
     paciente_id: z.string().uuid('ID do paciente deve ser um UUID válido'),
     funcionario_id: z.string().uuid('ID do funcionário deve ser um UUID válido'),
@@ -40,59 +38,58 @@ export const EscalaSchema = z.object({
     }),
 });
 
-export type EscalaInfor = z.infer<typeof EscalaSchema>;
-export type produtividadeInfor = z.infer<typeof ProdutividadeSchema>;
+export type ScheduleInfo = z.infer<typeof ScheduleSchema>;
+export type ProdutivityInfo = z.infer<typeof ProdutivitySchema>;
+export type AtuationCityInfo = z.infer<typeof atuationCity>;
 
-export type cidadedeAtuacaoInfor = z.infer<typeof cidadeDeAtuacaoSchmea>;
-
-export const produtividadeFilterSchema = z.object({
+export const produtivityFilterSchema = z.object({
     pacienteName: z.string().optional(),
     contratante: z.string().optional(),
     cidade: z.string().optional(),
     month: z.string().optional(),
 });
 
-export type ProdutividadeFilter = z.infer<typeof produtividadeFilterSchema>;
+export type ProdutivityFilter = z.infer<typeof produtivityFilterSchema>;
 
-const produtividadeeContext = createContext<{
-    fetchProdutividade: (filter?: ProdutividadeFilter, pageIndex?: number) => Promise<void>;
-    fetachEscapaByPacienteId: (paciente_id: string, month: string, pageIndex?: number) => Promise<void>;
-    produtividadeData: produtividadeInfor[];
-    protutividadeByPacienteID: EscalaInfor[];
-    paymentDataNotPaginated: produtividadeInfor[];
-    ProdutividadePacienteDataNotPaginated: EscalaInfor[];
+const ProdutivityContext = createContext<{
+    fetchProdutivity: (filter?: ProdutivityFilter, pageIndex?: number) => Promise<void>;
+    fetchScheduleByPatientId: (paciente_id: string, month: string, pageIndex?: number) => Promise<void>;
+    produtivityData: ProdutivityInfo[];
+    produtivityByPatientId: ScheduleInfo[];
+    paymentDataNotPaginated: ProdutivityInfo[];
+    patientProdutivityDataNotPaginated: ScheduleInfo[];
     loading: boolean;
     totalCount: number,
-    cidadesData: cidadedeAtuacaoInfor[];
-    pacienteTotalCont: number;
+    citiesData: AtuationCityInfo[];
+    patientTotalCount: number;
 
 }>({
-    fetchProdutividade: async () => { },
-    fetachEscapaByPacienteId: async () => { },
-    produtividadeData: [],
-    protutividadeByPacienteID: [],
+    fetchProdutivity: async () => { },
+    fetchScheduleByPatientId: async () => { },
+    produtivityData: [],
+    produtivityByPatientId: [],
     paymentDataNotPaginated: [],
-    ProdutividadePacienteDataNotPaginated: [],
+    patientProdutivityDataNotPaginated: [],
     loading: false,
     totalCount: 0,
-    cidadesData: [],
-    pacienteTotalCont: 0,
+    citiesData: [],
+    patientTotalCount: 0,
 
 });
 
-export const useProdutividade = () => useContext(produtividadeeContext);
+export const useProdutivity = () => useContext(ProdutivityContext);
 
-export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => {
-    const [produtividadeData, setprodutividadeDataData] = useState<produtividadeInfor[]>([]);
-    const [protutividadeByPacienteID, setProtutividadeByPacienteID] = useState<EscalaInfor[]>([]);
-    const [paymentDataNotPaginated, setPaymentDataNotPaginated] = useState<produtividadeInfor[]>([]);
-    const [ProdutividadePacienteDataNotPaginated, setProdutividadePacienteDataNotPaginated] = useState<EscalaInfor[]>([]);
-    const [cidadesData, setCidadesData] = useState<cidadedeAtuacaoInfor[]>([]);
+export const ProdutivityProvider = ({ children }: { children: ReactNode }) => {
+    const [produtivityData, setProdutivityData] = useState<ProdutivityInfo[]>([]);
+    const [produtivityByPatientId, setProdutivityByPatientId] = useState<ScheduleInfo[]>([]);
+    const [paymentDataNotPaginated, setPaymentDataNotPaginated] = useState<ProdutivityInfo[]>([]);
+    const [patientProdutivityDataNotPaginated, setPatientProdutivityDataNotPaginated] = useState<ScheduleInfo[]>([]);
+    const [citiesData, setCitiesData] = useState<AtuationCityInfo[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
-    const [pacienteTotalCont, setPacienteTotalCont] = useState<number>(0);
+    const [patientTotalCount, setPatientTotalCount] = useState<number>(0);
     const [totalCount, setTotalCount] = useState<number>(0);
 
-    const fetchProdutividade = useCallback(async (filters: ProdutividadeFilter = {}, pageIndex: number = 0) => {
+    const fetchProdutivity = useCallback(async (filters: ProdutivityFilter = {}, pageIndex: number = 0) => {
         try {
             setLoading(true);
             const perPage = 10;
@@ -114,7 +111,7 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
                 };
 
             });
-            setCidadesData(allCidades);
+            setCitiesData(allCidades);
 
 
             // Query inicial com filtro de pacientes
@@ -171,19 +168,19 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
             const paginatedPayments = allprodutividade.slice(offset, offset + perPage);
 
             // Atualizando estados
-            setprodutividadeDataData(paginatedPayments);
+            setProdutivityData(paginatedPayments);
             setPaymentDataNotPaginated(allprodutividade);
             setTotalCount(allprodutividade.length);
 
         } catch (error) {
             console.error("Erro ao buscar Produtividade:", error);
-            setprodutividadeDataData([]);
+            setProdutivityData([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const fetachEscapaByPacienteId = useCallback(async (paciente_id: string = '', month: string = '', pageIndex: number = 0) => {
+    const fetchScheduleByPatientId = useCallback(async (paciente_id: string = '', month: string = '', pageIndex: number = 0) => {
         try {
             setLoading(true);
             const perPage = 10;
@@ -215,7 +212,7 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
 
             if (scalesError) {
                 console.error("Erro ao buscar escalas:", scalesError);
-                setProtutividadeByPacienteID([]);
+                setProdutivityByPatientId([]);
                 return;
             }
 
@@ -240,21 +237,21 @@ export const ProdutividadeProvider = ({ children }: { children: ReactNode }) => 
             const paginatedPayments = allprodutividade.slice(offset, offset + perPage);
 
 
-            setProtutividadeByPacienteID(paginatedPayments);
-            setPacienteTotalCont(totalScalesCount ?? 0);
-            setProdutividadePacienteDataNotPaginated(allScales);
+            setProdutivityByPatientId(paginatedPayments);
+            setPatientTotalCount(totalScalesCount ?? 0);
+            setPatientProdutivityDataNotPaginated(allScales);
         } catch (error) {
             console.error("Erro ao buscar escalas do pacinte:", error);
-            setProtutividadeByPacienteID([]);
-            setProdutividadePacienteDataNotPaginated([]);
+            setProdutivityByPatientId([]);
+            setPatientProdutivityDataNotPaginated([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
     return (
-        <produtividadeeContext.Provider value={{ fetchProdutividade, fetachEscapaByPacienteId, produtividadeData, protutividadeByPacienteID, paymentDataNotPaginated, loading, totalCount, cidadesData, pacienteTotalCont, ProdutividadePacienteDataNotPaginated }}>
+        <ProdutivityContext.Provider value={{ fetchProdutivity, fetchScheduleByPatientId, produtivityData, produtivityByPatientId, paymentDataNotPaginated, loading, totalCount, citiesData, patientTotalCount, patientProdutivityDataNotPaginated }}>
             {children}
-        </produtividadeeContext.Provider>
+        </ProdutivityContext.Provider>
     );
 };

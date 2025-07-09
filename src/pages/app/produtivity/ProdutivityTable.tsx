@@ -1,15 +1,15 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useProdutividade } from "@/contexts/produtividadeContex";
+import { useProdutivity } from "@/contexts/produtivityContext";
 import { useEffect } from "react";
 import { TableSkeleton } from "@/components/table-skeleton";
-import { ProdutividadeRow } from "./ProditividadeRow";
+import { ProdutivityRow } from "./ProditivityRow";
 import jsPDF from "jspdf";
 interface PaymentTableProps {
     selectedMonth: string;
 }
 
-export const ProdutividadeTable = ({ selectedMonth }: PaymentTableProps) => {
-    const { produtividadeData, loading, paymentDataNotPaginated } = useProdutividade();
+export const ProdutivityTable = ({ selectedMonth }: PaymentTableProps) => {
+    const { produtivityData, loading, paymentDataNotPaginated } = useProdutivity();
 
 
     useEffect(() => { }, []);
@@ -83,11 +83,11 @@ export const ProdutividadeTable = ({ selectedMonth }: PaymentTableProps) => {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {produtividadeData && produtividadeData.map((produtividade) => (
-                    <ProdutividadeRow key={produtividade.paciente_id} produtividade={produtividade} moth={currentMonth}  />
+                {produtivityData && produtivityData.map((produtividade) => (
+                    <ProdutivityRow key={produtividade.paciente_id} produtividade={produtividade} moth={currentMonth}  />
                 ))}
             </TableBody>
-            {loading === true && produtividadeData.length <= 0 && <TableSkeleton />}
+            {loading === true && produtivityData.length <= 0 && <TableSkeleton />}
         </Table>
     );
 

@@ -65,7 +65,7 @@ export function AppLayout() {
             <Profile />
             <SideBar />
           </div>
-          <Separator orientation='vertical' className='h-full' />
+          <Separator orientation='vertical' className='h-screen' />
           <div className='w-full h-screen p-8 flex'>
             <Outlet />
             <span className="relative ">

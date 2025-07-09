@@ -17,7 +17,7 @@ import { Documents } from '@/pages/app/documents/Documents'
 import { RecoverPassword } from '@/pages/login/RecoverPassword'
 import { ResetPassword } from '@/pages/login/ResetPassword'
 import NotificationForm from '@/pages/app/notifications/NotificationForm'
-import { Produtividade } from '@/pages/app/produtividade/produtividade'
+import { Produtivity } from '@/pages/app/produtivity/produtivity'
 
 import { ContactPage } from '@/pages/app/contactPage/ContactPage'
 
@@ -98,7 +98,7 @@ export const router = createBrowserRouter([
       {
         path: '/produtividade', element:
           <ProtectedRoute allowedRoles={['admin', 'rh']}>
-            <Produtividade />
+            <Produtivity />
           </ProtectedRoute>
 
       },

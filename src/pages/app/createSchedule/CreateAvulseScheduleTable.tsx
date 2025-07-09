@@ -569,8 +569,8 @@ export const CreateAvulseScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     </Button>
                                 </div>
                                 {selectedData.length > 0 && (
-                                    <div className="p-2 bg-gray-50 rounded-md">
-                                        <p className="text-sm font-medium text-gray-700 mb-1">Datas selecionadas:</p>
+                                    <div className="p-2 rounded-md">
+                                        <p className="text-sm font-medium mb-1">Datas selecionadas:</p>
                                         <div className="flex flex-wrap gap-1">
                                             {selectedData.map((date, index) => (
                                                 <span

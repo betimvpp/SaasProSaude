@@ -2,7 +2,7 @@ import { Pagination } from "@/components/pagination";
 import { TableSkeleton } from "@/components/table-skeleton";
 import { DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { produtividadeInfor, useProdutividade } from "@/contexts/produtividadeContex";
+import { ProdutivityInfo, useProdutivity } from "@/contexts/produtivityContext";
 import jsPDF from "jspdf";
 import { useEffect, useRef, useState } from "react";
 
@@ -12,9 +12,9 @@ declare module 'jspdf' {
         autoTable: (options: any) => jsPDF;
     }
 }
-export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { produtividade: produtividadeInfor; loading: boolean; open: boolean, month: string }) => {
+export const ProdutivityDetails = ({ produtividade, loading, month, open }: { produtividade: ProdutivityInfo; loading: boolean; open: boolean, month: string }) => {
     const [pageIndex, setPageIndex] = useState(0);
-    const { fetachEscapaByPacienteId, pacienteTotalCont, loading: loadingScales, protutividadeByPacienteID, ProdutividadePacienteDataNotPaginated } = useProdutividade();
+    const { fetchScheduleByPatientId, patientTotalCount, loading: loadingScales, produtivityByPatientId, patientProdutivityDataNotPaginated } = useProdutivity();
     const isFirstRender = useRef(true);
 
     const handlePageChange = (newPageIndex: number) => {
@@ -30,14 +30,14 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
     };
     const generatePDF = () => {
         const doc = new jsPDF();
-        const header = `Paciente: ${produtividade.nome_paciente}\nContratante: ${produtividade.plano_saude || 'Não informado '} \n Total de:${ProdutividadePacienteDataNotPaginated.length}`;
+        const header = `Paciente: ${produtividade.nome_paciente}\nContratante: ${produtividade.plano_saude || 'Não informado '} \n Total de:${patientProdutivityDataNotPaginated.length}`;
 
         // Cabeçalho
         doc.setFontSize(12);
         doc.text(header, 10, 10);
 
         // Corpo da tabela
-        const tableData = ProdutividadePacienteDataNotPaginated.map(scale => [
+        const tableData = patientProdutivityDataNotPaginated.map(scale => [
             scale.funcionario.nome,
             scale.funcionario.role,
             scale.tipo_servico,
@@ -59,12 +59,12 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
 
     useEffect(() => {
         if (!open && produtividade?.paciente_id && month) {
-            fetachEscapaByPacienteId(produtividade.paciente_id, month, pageIndex);
+            fetchScheduleByPatientId(produtividade.paciente_id, month, pageIndex);
         } else {
             isFirstRender.current = false;
         }
 
-    }, [produtividade?.paciente_id, fetachEscapaByPacienteId, pageIndex]);
+    }, [produtividade?.paciente_id, fetchScheduleByPatientId, pageIndex]);
 
     return (
         <DialogContent className='min-w-[90vw] h-[90vh] flex flex-col overflow-y-scroll'>
@@ -94,7 +94,7 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
                         </TableRow>
                     </TableHeader>
                     <TableBody className='h-full w-full'>
-                        {protutividadeByPacienteID.map((scale, index) => (
+                        {produtivityByPatientId.map((scale, index) => (
                             <TableRow className='text-center' key={index}>
                                 <TableCell>{scale.funcionario.nome}</TableCell>
                                 <TableCell>{scale.funcionario.role}</TableCell>
@@ -107,7 +107,7 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
                     </TableBody>
                     {loadingScales && <TableSkeleton />}
                 </Table>
-                {!loading && protutividadeByPacienteID.length <= 0 && (
+                {!loading && produtivityByPatientId.length <= 0 && (
                     <div className="w-full h-[90%] m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">
                         Nenhum paciente encontrado!
                     </div>
@@ -115,7 +115,7 @@ export const ProdutividadeDetails = ({ produtividade, loading, month, open }: { 
             </div>
             <Pagination
                 pageIndex={pageIndex}
-                totalCount={pacienteTotalCont}
+                totalCount={patientTotalCount}
                 perPage={10}
                 onPageChange={handlePageChange}
             />

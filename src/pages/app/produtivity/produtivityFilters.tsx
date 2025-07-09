@@ -1,22 +1,21 @@
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ProdutividadeFilter, produtividadeFilterSchema, useProdutividade } from "@/contexts/produtividadeContex"
+import { ProdutivityFilter, produtivityFilterSchema, useProdutivity } from "@/contexts/produtivityContext"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Search, X } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 
-interface ProdutividadFilterProps {
-    setSelectedCidade: (cidade: string) => void;
+interface ProdutivityFilterProps {
+    setSelectedCity: (cidade: string) => void;
     setSelectedMonth: (month: string) => void;
 }
 
 
-export const ProdutividadeFiltert = ({ setSelectedCidade, setSelectedMonth }: ProdutividadFilterProps) => {
-    const { fetchProdutividade, cidadesData } = useProdutividade();
-
-    const { register, handleSubmit, control, reset } = useForm<ProdutividadeFilter>({
-        resolver: zodResolver(produtividadeFilterSchema),
+export const ProdutivityFilters = ({ setSelectedCity, setSelectedMonth }: ProdutivityFilterProps) => {
+    const { fetchProdutivity, citiesData } = useProdutivity();
+    const { register, handleSubmit, control, reset } = useForm<ProdutivityFilter>({
+        resolver: zodResolver(produtivityFilterSchema),
         defaultValues: {
             pacienteName: '',
             contratante: '',
@@ -25,10 +24,10 @@ export const ProdutividadeFiltert = ({ setSelectedCidade, setSelectedMonth }: Pr
         },
     });
 
-    async function handleFilter(data: ProdutividadeFilter) {
-        await fetchProdutividade(data);
+    async function handleFilter(data: ProdutivityFilter) {
+        await fetchProdutivity(data);
         setSelectedMonth(data.month!);
-        setSelectedCidade(data.cidade!);
+        setSelectedCity(data.cidade!);
     }
 
     function handleClearFilters() {
@@ -40,7 +39,7 @@ export const ProdutividadeFiltert = ({ setSelectedCidade, setSelectedMonth }: Pr
         };
 
         reset(defaultFilters);
-        fetchProdutividade(defaultFilters);
+        fetchProdutivity(defaultFilters);
     }
 
     const currentMonth = new Date().toISOString().slice(0, 7);
@@ -113,7 +112,7 @@ export const ProdutividadeFiltert = ({ setSelectedCidade, setSelectedMonth }: Pr
                                     <SelectValue  placeholder="Ordenar Por Cidade"/>
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {cidadesData && cidadesData.map((cidade) => (
+                                    {citiesData && citiesData.map((cidade) => (
                                         <SelectItem key={cidade.id} value={cidade.cidade}>
                                             {cidade.cidade}
                                         </SelectItem>

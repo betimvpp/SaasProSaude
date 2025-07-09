@@ -15,7 +15,7 @@ import { ScaleProvider } from './contexts/scaleContext'
 import { DocumentsProvider } from './contexts/docsContext'
 import { ComplaintsProvider } from './contexts/complaintsContext'
 import { PaymentProvider } from './contexts/paymentContext'
-import { ProdutividadeProvider } from './contexts/produtividadeContex'
+import { ProdutivityProvider } from './contexts/produtivityContext'
 
 export function App() {
   return (
@@ -29,7 +29,7 @@ export function App() {
                   <ScaleProvider>
                     <ComplaintsProvider>
                       <PaymentProvider>
-                        <ProdutividadeProvider>
+                        <ProdutivityProvider>
                         <HelmetProvider>
                           <Helmet titleTemplate='%s | ProSaude' />
                           <Toaster richColors />
@@ -37,7 +37,7 @@ export function App() {
                             <RouterProvider router={router} />
                           </QueryClientProvider>
                         </HelmetProvider>
-                        </ProdutividadeProvider>
+                        </ProdutivityProvider>
                       </PaymentProvider>
                     </ComplaintsProvider>
                   </ScaleProvider>

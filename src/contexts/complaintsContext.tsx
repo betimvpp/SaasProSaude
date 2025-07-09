@@ -85,7 +85,8 @@ export const ComplaintsProvider = ({ children }: { children: ReactNode }) => {
         const { data, error } = await supabase
             .from('financeiro_reclamacao')
             .select(`*
-            ,colaborador:colaborador_id (nome, role)`);
+            ,colaborador:colaborador_id (nome, role)`)
+            .eq('resolvido', false);
 
         if (error) {
             console.error('Erro ao buscar todas as reclamações:', error);
@@ -134,11 +135,6 @@ export const ComplaintsProvider = ({ children }: { children: ReactNode }) => {
             setLoading(false);
         }
     }, []);
-
-    // useEffect(() => {
-    //     fetchComplaints();
-    //     fetchComplaintsNotPaginated();
-    // }, [fetchComplaints, fetchComplaintsNotPaginated]);
 
     return (
         <ComplaintsContext.Provider value={{

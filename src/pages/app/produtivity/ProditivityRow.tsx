@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { produtividadeInfor } from "@/contexts/produtividadeContex";
+import { ProdutivityInfo } from "@/contexts/produtivityContext";
 import { Search } from "lucide-react";
 import { useState } from "react";
-import { ProdutividadeDetails } from "./ProdutividadeDetails";
+import { ProdutivityDetails } from "./ProdutivityDetails";
 
-export const ProdutividadeRow = ({ produtividade, moth }: { produtividade: produtividadeInfor, moth: string }) => {
+export const ProdutivityRow = ({ produtividade, moth }: { produtividade: ProdutivityInfo, moth: string }) => {
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
     return (
         <TableRow key={produtividade.paciente_id}>
@@ -18,7 +18,7 @@ export const ProdutividadeRow = ({ produtividade, moth }: { produtividade: produ
                             <span className="sr-only">Detalhes do RH</span>
                         </Button>
                     </DialogTrigger>
-                    <ProdutividadeDetails produtividade={produtividade} loading={false} open={false} month={moth} />
+                    <ProdutivityDetails produtividade={produtividade} loading={false} open={false} month={moth} />
                 </Dialog>
             </TableCell>
             <TableCell className="text-center">{produtividade.nome_paciente}</TableCell>

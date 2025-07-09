@@ -26,6 +26,7 @@ export type PaymentInfo = z.infer<typeof paymentInfoSchema>;
 
 export const paymentFiltersSchema = z.object({
     collaboratorName: z.string().optional(),
+    contratante: z.string().optional(),
     role: z.string().optional(),
     month: z.string().optional(),
 });

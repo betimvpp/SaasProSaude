@@ -1,5 +1,5 @@
 import { NavLink } from './nav-link'
-import { BadgeAlert, CalendarDays, ChartSplineIcon, Contact2, FileText, HandCoins, Speech, Stethoscope } from 'lucide-react'
+import { BadgeAlert, CalendarDays, ChartSplineIcon, Contact2, FileText, HandCoins, Speech, SquareChartGantt, Stethoscope } from 'lucide-react'
 import { Separator } from './ui/separator'
 import { useAuth } from '@/contexts/authContext'
 import { useNavigate } from 'react-router-dom';
@@ -73,7 +73,7 @@ export function SideBar() {
                     Mensagens
                 </NavLink> */}
                 <NavLink to="/produtividade" disabled={isRestricted}>
-                    <HandCoins className='h-6 w-6' />
+                    <SquareChartGantt className='h-6 w-6' />
                     Produtividade
                 </NavLink>
             </nav>
