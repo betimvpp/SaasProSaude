@@ -16,6 +16,7 @@ export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
         resolver: zodResolver(paymentFiltersSchema),
         defaultValues: {
             collaboratorName: '',
+            plano_saude: '',
             role: 'all',
             month: new Date().toISOString().slice(0, 7),
         },
@@ -29,12 +30,14 @@ export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
     function handleClearFilters() {
         const defaultFilters = {
             collaboratorName: '',
+            plano_saude: '',
             role: 'all',
             month: new Date().toISOString().slice(0, 7),
         };
 
         reset(defaultFilters);
         fetchPayments(defaultFilters);
+        onFilterChange(defaultFilters.month, defaultFilters.role);
     }
     const currentMonth = new Date().toISOString().slice(0, 7);
     const currentYear = parseInt(currentMonth.split("-")[0], 10);
@@ -46,6 +49,11 @@ export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
                 className="flex items-center gap-2"
             >
                 <span className="text-sm font-semibold">Filtros:</span>
+                <Input
+                    placeholder="Plano de Saúde"
+                    className="h-8 w-[12rem]"
+                    {...register('plano_saude')}
+                />
                 <Input
                     placeholder="Nome do colaborador"
                     className="h-8 w-[17rem]"

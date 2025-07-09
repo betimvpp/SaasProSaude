@@ -16,6 +16,7 @@ export const scaleSchema = z.object({
     chave_pix: z.string().optional().nullable(),
     nomePaciente: z.string().optional().nullable(),
     telefonePaciente: z.string().optional().nullable(),
+    plano_saude: z.string().optional().nullable(),
     horario_gerenciamento: z.string().optional().nullable(),
     troca_servico_id: z.bigint().optional(),
 });

@@ -71,7 +71,8 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         // Corpo da tabela
         const tableData = collaboratorScalesDataNotPaginated.map(scale => [
             scale.nomePaciente,
-            scale.chave_pix || 'Chave Pix Não Definida',
+            scale.telefonePaciente || 'Telefone não definido',
+            scale.plano_saude || 'Não informado',
             scale.tipo_servico,
             getServiceTime(scale.tipo_servico!, 'Horário não definido'),
             scale?.data || 'Data inválida',
@@ -80,7 +81,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
         ]);
 
         doc.autoTable({
-            head: [['Paciente', 'Telefone', 'Serviço', 'Horário', 'Data', 'Valor Pago', 'Pagamento']],
+            head: [['Paciente', 'Telefone', 'Contratante', 'Serviço', 'Horário', 'Data', 'Valor Pago', 'Pagamento']],
             body: tableData,
             startY: 50,
         });
@@ -129,7 +130,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
             const patientPromises = allScales.map(async (scale): Promise<Scale | null> => {
                 const { data: patientData, error: patientError } = await supabase
                     .from("paciente")
-                    .select("nome, cpf, telefone")
+                    .select("nome, cpf, telefone, plano_saude")
                     .eq("paciente_id", scale.paciente_id)
                     .single();
 
@@ -142,6 +143,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                     ...scale,
                     nomePaciente: patientData?.nome,
                     telefonePaciente: patientData?.telefone,
+                    plano_saude: patientData?.plano_saude,
                 };
             });
 
@@ -191,6 +193,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                             <TableRow className="text-center">
                                 <TableHead className="text-center">Nome do Paciente</TableHead>
                                 <TableHead className="text-center">Telefone do Paciente</TableHead>
+                                <TableHead className="text-center">Contratante</TableHead>
                                 <TableHead className="text-center">Tipo De Serviço</TableHead>
                                 <TableHead className="text-center">Horário</TableHead>
                                 <TableHead className="text-center">Data</TableHead>
@@ -204,6 +207,7 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
                                 <TableRow className='text-center' key={index}>
                                     <TableCell>{scale.nomePaciente!}</TableCell>
                                     <TableCell>{scale.telefonePaciente || "Telefone não definido"}</TableCell>
+                                    <TableCell>{scale.plano_saude || "Não informado"}</TableCell>
                                     <TableCell>{scale.tipo_servico}</TableCell>
                                     <TableCell>{getServiceTime(scale.tipo_servico!, "Horário não definido")}</TableCell>
                                     <TableCell>{scale?.data?.toLocaleString()}</TableCell>

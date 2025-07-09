@@ -12,6 +12,9 @@ export const paymentInfoSchema = z.object({
     valor_recebido: z.number().optional(),
     valor_pago: z.number().optional(),
     mes: z.string().optional(),
+    paciente: z.object({
+        plano_saude: z.string().optional(),
+    }).optional(),
 
     paciente_telefone: z.string().optional(),
     paciente_nome: z.string().optional(),
@@ -26,7 +29,7 @@ export type PaymentInfo = z.infer<typeof paymentInfoSchema>;
 
 export const paymentFiltersSchema = z.object({
     collaboratorName: z.string().optional(),
-    contratante: z.string().optional(),
+    plano_saude: z.string().optional(),
     role: z.string().optional(),
     month: z.string().optional(),
 });
@@ -69,7 +72,7 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 setLoading(true);
                 const perPage = 10;
                 const offset = pageIndex * perPage;
-                const { collaboratorName, role, month } = filters;
+                const { collaboratorName, role, month, plano_saude } = filters;
 
                 let baseQuery = supabase
                     .from("funcionario")
@@ -90,9 +93,10 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                 const monthNumber = parseInt(currentMonth.split("-")[1], 10);
                 const lastDayOfMonth = new Date(year, monthNumber, 0).getDate();
 
+                // Primeiro, buscar escalas do período
                 const { data: allScales, error: scalesError } = await supabase
                     .from("escala")
-                    .select("*")
+                    .select("*, paciente(plano_saude)")
                     .gte("data", `${currentMonth}-01`)
                     .lte("data", `${currentMonth}-${lastDayOfMonth}`);
 
@@ -102,9 +106,18 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                     return;
                 }
 
+                // Filtrar escalas por plano de saúde se especificado
+                let filteredScales = allScales;
+                if (plano_saude && plano_saude.trim() !== '') {
+                    filteredScales = allScales.filter(scale => 
+                        scale.paciente?.plano_saude && 
+                        scale.paciente.plano_saude.toLowerCase().includes(plano_saude.toLowerCase())
+                    );
+                }
+
                 const mapPayments = (collaborators: any) =>
                     collaborators.map((collaborator: any) => {
-                        const collaboratorScales = allScales.filter(
+                        const collaboratorScales = filteredScales.filter(
                             (scale) => scale.funcionario_id === collaborator.funcionario_id
                         );
 
