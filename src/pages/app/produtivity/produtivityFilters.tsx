@@ -7,12 +7,12 @@ import { Search, X } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 
 interface ProdutivityFilterProps {
-    setSelectedCity: (cidade: string) => void;
+    // setSelectedCity: (cidade: string) => void;
     setSelectedMonth: (month: string) => void;
 }
 
 
-export const ProdutivityFilters = ({ setSelectedCity, setSelectedMonth }: ProdutivityFilterProps) => {
+export const ProdutivityFilters = ({  setSelectedMonth }: ProdutivityFilterProps) => {
     const { fetchProdutivity, citiesData } = useProdutivity();
     const { register, handleSubmit, control, reset } = useForm<ProdutivityFilter>({
         resolver: zodResolver(produtivityFilterSchema),
@@ -27,7 +27,7 @@ export const ProdutivityFilters = ({ setSelectedCity, setSelectedMonth }: Produt
     async function handleFilter(data: ProdutivityFilter) {
         await fetchProdutivity(data);
         setSelectedMonth(data.month!);
-        setSelectedCity(data.cidade!);
+        // setSelectedCity(data.cidade!);
     }
 
     function handleClearFilters() {

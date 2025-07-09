@@ -37,7 +37,7 @@ export const Payments = () => {
       <div className="w-full min-h-[700px] shadow-lg border rounded-md">
         <PaymentTable selectedMonth={selectedMonth} />
         {paymentData?.length === 0 && loading === false &&
-          <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhum usuário encontrado!</div>
+          <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhum pagamento encontrado!</div>
         }
       </div>
       <Pagination

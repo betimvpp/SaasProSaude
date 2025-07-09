@@ -17,7 +17,7 @@ export const ScaleCalendar = () => {
     const [loading, setLoading] = useState(false);
     const today = dayjs();
 
-    const { fetchScales, fetchScalesNotPaginated, scaleCountsByDate, scalesNotPaginated } = useScale();
+    const { fetchScales, fetchScalesNotPaginated, scaleCountsByDate } = useScale();
 
     const handlePreviousMonth = () => setCurrentDate(currentDate.subtract(1, "month"));
     const handleNextMonth = () => setCurrentDate(currentDate.add(1, "month"));

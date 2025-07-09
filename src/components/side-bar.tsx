@@ -1,5 +1,15 @@
 import { NavLink } from './nav-link'
-import { BadgeAlert, CalendarDays, ChartSplineIcon, Contact2, FileText, HandCoins, Speech, SquareChartGantt, Stethoscope } from 'lucide-react'
+import {
+    BadgeAlert,
+    CalendarDays,
+    ChartSplineIcon,
+    Contact2,
+    FileText,
+    HandCoins,
+    Speech,
+    // SquareChartGantt, 
+    Stethoscope
+} from 'lucide-react'
 import { Separator } from './ui/separator'
 import { useAuth } from '@/contexts/authContext'
 import { useNavigate } from 'react-router-dom';
