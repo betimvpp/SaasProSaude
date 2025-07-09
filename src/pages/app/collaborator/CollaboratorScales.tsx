@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const months = [
     { value: "1", label: "Janeiro" },
@@ -33,6 +34,7 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
     const [editingRow, setEditingRow] = useState<number | null>(null);
     const [editedValues, setEditedValues] = useState<{ valor_pago: string; pagamentoAR_AV: string; valor_recebido: string; tipo_servico: string; }>({ valor_pago: "", pagamentoAR_AV: "", valor_recebido: "", tipo_servico: "" });
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedScales, setSelectedScales] = useState<Scale[]>([]);
 
     const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0, month: number) => {
         try {
@@ -110,11 +112,13 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
     const handlePageChange = (newPageIndex: number) => {
         setPageIndex(newPageIndex);
+        setSelectedScales([]);
     };
 
     const handleMonthChange = (value: string) => {
         setSelectedMonth(parseInt(value, 10));
         setPageIndex(0);
+        setSelectedScales([]);
     };
 
     const handleEditClick = (escala_id: number, scale: Scale) => {
@@ -164,6 +168,42 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
         }
     };
 
+
+    const handleMultiDelete = async () => {
+        if (selectedScales.length === 0) {
+            return;
+        }
+
+        try {
+            const escalaIds = selectedScales.map(scale => scale.escala_id!);
+            for (const escala_id of escalaIds) {
+                const { error } = await supabase.from("escala").delete().eq("escala_id", escala_id);
+                if (error) throw error;
+            }
+
+            setSelectedScales([]);
+            fetchCollaboratorScales(collaborator?.funcionario_id, pageIndex, selectedMonth);
+        } catch (error) {
+            console.error("Erro ao excluir escalas:", error);
+        }
+    };
+
+    const handleSelectScale = (escala: Scale) => {
+        setSelectedScales(prev => 
+            prev.some(selectedScale => selectedScale.escala_id === escala.escala_id)
+                ? prev.filter(selectedScale => selectedScale.escala_id !== escala.escala_id)
+                : [...prev, escala]
+        );
+    };
+
+    const handleSelectAll = () => {
+        if (selectedScales.length === scales.length) {
+            setSelectedScales([]);
+        } else {
+            setSelectedScales([...scales]);
+        }
+    };
+
     const getServiceTime = (tipoServico: string, defaultHorario: string) => {
         switch (tipoServico) {
             case 'SD':
@@ -187,25 +227,48 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                 <DialogTitle>Escalas do Colaborador: {collaborator.nome}</DialogTitle>
                 <DialogDescription>Status: {collaborator.status}</DialogDescription>
             </DialogHeader>
-            <div className="flex items-center mb-4 gap-3">
-                <h2 className="text-lg font-semibold">Filtrar por mês:</h2>
-                <Select onValueChange={handleMonthChange} defaultValue={selectedMonth.toString()}>
-                    <SelectTrigger className="w-40">
-                        <SelectValue placeholder="Selecione o mês" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {months.map((month) => (
-                            <SelectItem key={month.value} value={month.value} className="cursor-pointer">
-                                {month.label}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold">Filtrar por mês:</h2>
+                    <Select onValueChange={handleMonthChange} defaultValue={selectedMonth.toString()}>
+                        <SelectTrigger className="w-40">
+                            <SelectValue placeholder="Selecione o mês" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {months.map((month) => (
+                                <SelectItem key={month.value} value={month.value} className="cursor-pointer">
+                                    {month.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {selectedScales.length > 0 && (
+                        <span className="text-sm text-muted-foreground">
+                            {selectedScales.length} escala{selectedScales.length > 1 ? 's' : ''} selecionada{selectedScales.length > 1 ? 's' : ''}
+                        </span>
+                    )}
+                </div>
+                {selectedScales.length > 0 && (
+                    <Button 
+                        variant="destructive" 
+                        onClick={handleMultiDelete}
+                        className="flex items-center gap-2"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                        Deletar {selectedScales.length} escala{selectedScales.length > 1 ? 's' : ''}
+                    </Button>
+                )}
             </div>
             <div className="w-full h-[625px] shadow-lg border rounded-md my-4 ">
                 <Table>
                     <TableHeader className="text-center">
                         <TableRow className="text-center">
+                            <TableHead className="text-center">
+                                <Checkbox 
+                                    checked={selectedScales.length === scales.length && scales.length > 0}
+                                    onCheckedChange={handleSelectAll}
+                                />
+                            </TableHead>
                             <TableHead className="text-center">Paciente</TableHead>
                             <TableHead className="text-center">Data</TableHead>
                             {!isLoading && isAdmin === "admin" && <TableHead className="text-center">Valor Recebido</TableHead>}
@@ -221,6 +284,12 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
                         <TableBody className="text-center">
                             {scales && scales.map((scale: Scale) => (
                                 <TableRow key={scale.escala_id}>
+                                    <TableCell>
+                                        <Checkbox 
+                                            checked={selectedScales.some(selectedScale => selectedScale.escala_id === scale.escala_id)}
+                                            onCheckedChange={() => handleSelectScale(scale)}
+                                        />
+                                    </TableCell>
                                     <TableCell>{scale.nomePaciente}</TableCell>
                                     <TableCell>{scale.data}</TableCell>
 
