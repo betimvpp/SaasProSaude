@@ -50,7 +50,7 @@ export function PaymentFilter({ onFilterChange }: PaymentFilterProps) {
             >
                 <span className="text-sm font-semibold">Filtros:</span>
                 <Input
-                    placeholder="Plano de Saúde"
+                    placeholder="Contratante"
                     className="h-8 w-[12rem]"
                     {...register('plano_saude')}
                 />

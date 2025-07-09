@@ -95,13 +95,13 @@ export const router = createBrowserRouter([
             <NotificationForm />
           </ProtectedRoute>
       },
-      {
-        path: '/produtividade', element:
-          <ProtectedRoute allowedRoles={['admin', 'rh']}>
-            <Produtivity />
-          </ProtectedRoute>
+      // {
+      //   path: '/produtividade', element:
+      //     <ProtectedRoute allowedRoles={['admin', 'rh']}>
+      //       <Produtivity />
+      //     </ProtectedRoute>
 
-      },
+      // },
       {
         path: '/paginaDeContato', element:
           <ContactPage />

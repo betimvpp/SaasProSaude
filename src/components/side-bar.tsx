@@ -68,14 +68,10 @@ export function SideBar() {
                     <HandCoins className='h-6 w-6' />
                     Pagamentos
                 </NavLink>
-                {/* <NavLink to="/mensagens" disabled={isRestricted}>
-                    <MessageCircle className='h-6 w-6' />
-                    Mensagens
-                </NavLink> */}
-                <NavLink to="/produtividade" disabled={isRestricted}>
+                {/* <NavLink to="/produtividade" disabled={isRestricted}>
                     <SquareChartGantt className='h-6 w-6' />
                     Produtividade
-                </NavLink>
+                </NavLink> */}
             </nav>
             <Separator className='mt-6 mb-2 w-full' />
             <Button className='w-32' variant={'destructive'} onClick={handleLogout}>
