@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/authContext';
 import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
 import { useEffect, useState } from 'react';
 import { CreateAvulseScheduleTable } from './CreateAvulseScheduleTable';
+import { CreateImportedScheduleTable } from './CreateImportedSchedule/CreateImportedScheduleTable';
 export const CreateScheduleTabs = () => {
     const { user } = useAuth();
     const { getCollaboratorById } = useCollaborator();
@@ -25,6 +26,7 @@ export const CreateScheduleTabs = () => {
                 <TabsTrigger value="avulse">Avulsa</TabsTrigger>
                 <TabsTrigger value="simple">Simples</TabsTrigger>
                 <TabsTrigger value="multi">Corrida</TabsTrigger>
+                <TabsTrigger value="imported">Importada</TabsTrigger>
             </TabsList>
 
             <TabsContent value="simple" className="w-full h-full">
@@ -37,6 +39,10 @@ export const CreateScheduleTabs = () => {
 
             <TabsContent value="avulse" className="w-full h-full">
                 <CreateAvulseScheduleTable isAdmin={collaboratorData?.role!} />
+            </TabsContent>
+
+            <TabsContent value="imported" className="w-full h-full">
+                <CreateImportedScheduleTable />
             </TabsContent>
         </Tabs>
     )
