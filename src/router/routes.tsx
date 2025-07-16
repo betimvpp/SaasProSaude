@@ -16,7 +16,6 @@ import { Complaints } from '@/pages/app/complaints/Complaints'
 import { Documents } from '@/pages/app/documents/Documents'
 import { RecoverPassword } from '@/pages/login/RecoverPassword'
 import { ResetPassword } from '@/pages/login/ResetPassword'
-import NotificationForm from '@/pages/app/notifications/NotificationForm'
 // import { Produtivity } from '@/pages/app/produtivity/produtivity'
 
 import { ContactPage } from '@/pages/app/contactPage/ContactPage'
@@ -49,6 +48,12 @@ export const router = createBrowserRouter([
       },
       {
         path: '/escala/criar', element:
+          <ProtectedRoute allowedRoles={['admin', 'rh']}>
+            <CreateSchedule />
+          </ProtectedRoute>
+      },
+      {
+        path: '/escala/criar-importada', element:
           <ProtectedRoute allowedRoles={['admin', 'rh']}>
             <CreateSchedule />
           </ProtectedRoute>
@@ -89,12 +94,7 @@ export const router = createBrowserRouter([
             <Payments />
           </ProtectedRoute>
       },
-      {
-        path: '/mensagens', element:
-          <ProtectedRoute allowedRoles={['admin']}>
-            <NotificationForm />
-          </ProtectedRoute>
-      },
+ 
       // {
       //   path: '/produtividade', element:
       //     <ProtectedRoute allowedRoles={['admin', 'rh']}>

@@ -10,13 +10,20 @@ export const CreateScheduleTabs = () => {
     const { user } = useAuth();
     const { getCollaboratorById } = useCollaborator();
     const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-
+    // Adicionando verificação de URL
+    const [isImportedTabAvailable, setIsImportedTabAvailable] = useState(false);
 
     useEffect(() => {
         if (user) {
             getCollaboratorById(user.id)
                 .then(data => setCollaboratorData(data))
                 .finally();
+        }
+
+        if (window?.location?.pathname === `/escala/criar-importada`) {
+            setIsImportedTabAvailable(true);
+        } else {
+            setIsImportedTabAvailable(false);
         }
     }, [user, getCollaboratorById]);
 
@@ -26,7 +33,9 @@ export const CreateScheduleTabs = () => {
                 <TabsTrigger value="avulse">Avulsa</TabsTrigger>
                 <TabsTrigger value="simple">Simples</TabsTrigger>
                 <TabsTrigger value="multi">Corrida</TabsTrigger>
-                <TabsTrigger value="imported">Importada</TabsTrigger>
+                {isImportedTabAvailable && (
+                    <TabsTrigger value="imported">Importada</TabsTrigger>
+                )}
             </TabsList>
 
             <TabsContent value="simple" className="w-full h-full">
@@ -41,9 +50,11 @@ export const CreateScheduleTabs = () => {
                 <CreateAvulseScheduleTable isAdmin={collaboratorData?.role!} />
             </TabsContent>
 
-            <TabsContent value="imported" className="w-full h-full">
-                <CreateImportedScheduleTable />
-            </TabsContent>
+            {isImportedTabAvailable && (
+                <TabsContent value="imported" className="w-full h-full">
+                    <CreateImportedScheduleTable />
+                </TabsContent>
+            )}
         </Tabs>
     )
 }
