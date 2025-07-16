@@ -330,17 +330,20 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     <SelectValue placeholder="Selecione um paciente" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <Input
-                                        className='pb-1'
-                                        {...registerPatient("patientName")}
-                                        placeholder="Digite o nome do paciente"
-                                        onChange={(e) => {
-                                            e.preventDefault();
-                                            const value = e.target.value;
-                                            setSearchValue(value);
-                                            setPatientValue("patientName", value);
-                                        }}
-                                    />
+                                    <div className="sticky top-0 bg-background z-10 p-2 border-b">
+                                        <Input
+                                            className='pb-1'
+                                            {...registerPatient("patientName")}
+                                            placeholder="Digite o nome do paciente"
+                                            onChange={(e) => {
+                                                e.preventDefault();
+                                                const value = e.target.value;
+                                                setSearchValue(value);
+                                                setPatientValue("patientName", value);
+                                            }}
+                                            onKeyDown={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
 
                                     {patientsNotPaginated.map((patient) => (
                                         <SelectItem {...register('paciente_id')} key={patient.paciente_id} value={patient.paciente_id}>
@@ -403,16 +406,19 @@ export const CreateSingleScheduleTable = ({ isAdmin }: { isAdmin: string }) => {
                                     <SelectValue placeholder="Selecione um colaborador" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <Input
-                                        className='pb-1'
-                                        {...registerCollaborator("collaboratorName")}
-                                        placeholder="Digite o nome do colaborador"
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            setCollaboratorSearchValue(value);
-                                            setCollaboratorValue("collaboratorName", value);
-                                        }}
-                                    />
+                                    <div className="sticky top-0 bg-background z-10 p-2 border-b">
+                                        <Input
+                                            className='pb-1'
+                                            {...registerCollaborator("collaboratorName")}
+                                            placeholder="Digite o nome do colaborador"
+                                            onChange={(e) => {
+                                                const value = e.target.value;
+                                                setCollaboratorSearchValue(value);
+                                                setCollaboratorValue("collaboratorName", value);
+                                            }}
+                                            onKeyDown={(e) => e.stopPropagation()}
+                                        />
+                                    </div>
                                     {filteredCollaborators.map((collaborator) => (
                                         <SelectItem key={collaborator.funcionario_id} value={collaborator.funcionario_id}>
                                             {collaborator.nome}

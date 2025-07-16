@@ -148,10 +148,25 @@ export const PaymentProvider = ({ children }: { children: ReactNode }) => {
                     (payment: any) => payment.valor_recebido !== 0 || payment.valor_pago !== 0
                 );
 
-                const paginatedPayments = allPayments.slice(offset, offset + perPage);
+                // Ordenar todos os pagamentos por valor_pago (maior para menor) e depois alfabeticamente por nome
+                const sortedAllPayments = allPayments.sort((a: any, b: any) => {
+                    const valorA = parseFloat(a.valor_pago?.toString() || '0');
+                    const valorB = parseFloat(b.valor_pago?.toString() || '0');
+                    
+                    if (valorA !== valorB) {
+                        return valorB - valorA; // Maior valor primeiro
+                    }
+                    
+                    // Se valores são iguais, ordenar alfabeticamente por nome
+                    const nomeA = a.nome || '';
+                    const nomeB = b.nome || '';
+                    return nomeA.localeCompare(nomeB, 'pt-BR');
+                });
+
+                const paginatedPayments = sortedAllPayments.slice(offset, offset + perPage);
 
                 setPaymentData(paginatedPayments);
-                setPaymentDataNotPaginated(allPayments);
+                setPaymentDataNotPaginated(sortedAllPayments);
                 setTotalCount(allPayments.length);
             } catch (error) {
                 console.error("Erro ao buscar pagamentos:", error);

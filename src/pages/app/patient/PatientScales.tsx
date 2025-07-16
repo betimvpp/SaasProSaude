@@ -24,7 +24,7 @@ const months = [
     { value: "11", label: "Novembro" },
     { value: "12", label: "Dezembro" },
 ];
-export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Patient; isAdmin: string; isLoading: boolean; }) => {
+export const PatientScales = ({ patient, isAdmin, isLoading, }: { patient: Patient; isAdmin: string; isLoading: boolean; }) => {
     const [scales, setPatientScalesData] = useState<Scale[]>([]);
     const [loading, setLoading] = useState(false);
     const [totalCount, setTotalScalesCount] = useState(0);

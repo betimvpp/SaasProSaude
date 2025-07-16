@@ -79,7 +79,7 @@ export const ScaleCalendarDetails = ({ date, loading }: ScaleCalendarDetailsProp
                     </Table>
                 )}
                 {selectedDateScales?.length === 0 && loading === false &&
-                    <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhuma Escala encontrado!</div>
+                    <div className="w-full h-full m-auto text-center text-lg font-semibold text-muted-foreground flex items-center justify-center">Nenhuma escala encontrada!</div>
                 }
             </div>
             <Pagination

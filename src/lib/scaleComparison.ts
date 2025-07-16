@@ -26,8 +26,7 @@ export interface ComparacaoEscala {
 // Função para buscar paciente por correspondência parcial de nome
 async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_id: string; nome: string } | null> {
   try {
-    console.log("🔍 Buscando paciente por nome (comparação):", nomePaciente);
-    
+
     // Primeiro, tentar busca exata - APENAS LEITURA
     const { data: pacienteExato, error: errorExato } = await supabase
       .from("paciente")
@@ -36,14 +35,11 @@ async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_i
       .single();
 
     if (pacienteExato && !errorExato) {
-      console.log("✅ Paciente encontrado (busca exata):", pacienteExato);
       return pacienteExato;
     }
 
     // Se não encontrar, buscar por correspondência parcial - APENAS LEITURA
-    const nomeNormalizado = normalizarNome(nomePaciente);
-    console.log("🔍 Buscando por correspondência parcial:", nomeNormalizado);
-    
+    const nomeNormalizado = normalizarNome(nomePaciente);    
     // Buscar todos os pacientes - APENAS LEITURA
     const { data: todosPacientes, error: errorTodos } = await supabase
       .from("paciente")
@@ -60,12 +56,11 @@ async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_i
       
       // Verificar se o nome do Excel está contido no nome do banco
       if (nomeBancoNormalizado.includes(nomeNormalizado) || nomeNormalizado.includes(nomeBancoNormalizado)) {
-        console.log("✅ Paciente encontrado (correspondência parcial):", paciente);
         return paciente;
       }
     }
 
-    console.log("❌ Paciente não encontrado:", nomePaciente);
+
     return null;
   } catch (error) {
     console.error("❌ Erro ao buscar paciente:", error);

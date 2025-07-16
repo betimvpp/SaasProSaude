@@ -14,6 +14,9 @@ declare module 'jspdf' {
     }
 }
 
+// Cache para armazenar dados por funcionario_id, mês e página
+const paymentDetailsCache = new Map<string, { data: Scale[]; totalCount: number; timestamp: number }>();
+
 export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: PaymentInfo; isAdmin: string; loading: boolean; open: boolean }) => {
     const [pageIndex, setPageIndex] = useState(0);
 
@@ -21,6 +24,15 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
     const [collaboratorScalesDataNotPaginated, setCollaboratorScalesDataNotPaginated] = useState<Scale[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [totalCount, setTotalScalesCount] = useState(0);
+
+    const getCacheKey = (funcionario_id: string, month: string, pageIndex: number) => {
+        return `${funcionario_id}-${month}-${pageIndex}`;
+    };
+
+    const isCacheValid = (timestamp: number) => {
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+        return Date.now() - timestamp < CACHE_DURATION;
+    };
 
     const handlePageChange = (newPageIndex: number) => {
         setPageIndex(newPageIndex);
@@ -91,6 +103,19 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
     };
 
     const fetchCollaboratorScales = useCallback(async (funcionario_id: string, month: string, pageIndex: number = 0) => {
+        const cacheKey = getCacheKey(funcionario_id, month, pageIndex);
+        const cachedData = paymentDetailsCache.get(cacheKey);
+
+        // Verifica se existe cache válido
+        if (cachedData && isCacheValid(cachedData.timestamp)) {
+            const paginatedData = cachedData.data.slice(pageIndex * 10, (pageIndex + 1) * 10);
+            setCollaboratorScalesData(paginatedData);
+            setCollaboratorScalesDataNotPaginated(cachedData.data);
+            setTotalScalesCount(cachedData.totalCount);
+            setIsLoading(false);
+            return;
+        }
+
         try {
             setIsLoading(true);
             const perPage = 10;
@@ -151,6 +176,13 @@ export const PaymentDetails = ({ payment, isAdmin, loading }: { payment: Payment
             const validScales = scalesWithPatients.filter((scale): scale is Scale => scale !== null);
 
             const paginatedPayments = validScales.slice(offset, offset + perPage);
+
+            // Salva no cache
+            paymentDetailsCache.set(cacheKey, {
+                data: validScales,
+                totalCount: totalScalesCount || 0,
+                timestamp: Date.now()
+            });
 
             setCollaboratorScalesDataNotPaginated(validScales);
             setCollaboratorScalesData(paginatedPayments);

@@ -26,6 +26,9 @@ const months = [
     { value: "12", label: "Dezembro" },
 ];
 
+// Cache para armazenar dados por funcionario_id, mês e página
+const scalesCache = new Map<string, { data: Scale[]; totalCount: number; timestamp: number }>();
+
 export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { collaborator: Collaborator; isAdmin: string; isLoading: boolean; }) => {
     const [scales, setCollaboratorScalesData] = useState<Scale[]>([]);
     const [loading, setLoading] = useState(false);
@@ -36,7 +39,27 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedScales, setSelectedScales] = useState<Scale[]>([]);
 
+    const getCacheKey = (funcionario_id: string, month: number, pageIndex: number) => {
+        return `${funcionario_id}-${month}-${pageIndex}`;
+    };
+
+    const isCacheValid = (timestamp: number) => {
+        const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+        return Date.now() - timestamp < CACHE_DURATION;
+    };
+
     const fetchCollaboratorScales = useCallback(async (funcionario_id: string, pageIndex: number = 0, month: number) => {
+        const cacheKey = getCacheKey(funcionario_id, month, pageIndex);
+        const cachedData = scalesCache.get(cacheKey);
+
+        // Verifica se existe cache válido
+        if (cachedData && isCacheValid(cachedData.timestamp)) {
+            setCollaboratorScalesData(cachedData.data);
+            setTotalScalesCount(cachedData.totalCount);
+            setLoading(false);
+            return;
+        }
+
         try {
             setLoading(true);
             const perPage = 10;
@@ -92,6 +115,13 @@ export const CollaboratorSchales = ({ collaborator, isAdmin, isLoading, }: { col
 
             const scalesWithPatients = await Promise.all(patientPromises);
             const validScales = scalesWithPatients.filter((scale): scale is Scale => scale !== null);
+
+            // Salva no cache
+            scalesCache.set(cacheKey, {
+                data: validScales,
+                totalCount: totalScalesCount || 0,
+                timestamp: Date.now()
+            });
 
             setCollaboratorScalesData(validScales);
             setTotalScalesCount(totalScalesCount || 0);

@@ -64,6 +64,7 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
 
         let query = supabase.from('funcionario')
             .select('*')
+            .order('nome', { ascending: true })
             .neq("role", "rh")
             .neq("role", "admin")
             .range(pageIndex * 10, pageIndex * 10 + 9);
@@ -95,6 +96,7 @@ export const CollaboratorProvider = ({ children }: { children: ReactNode }) => {
 
         let query = supabase.from('funcionario')
             .select('*')
+            .order('nome', { ascending: true })
             .neq("role", "rh")
             .neq("role", "admin");
 

@@ -50,6 +50,7 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let query = supabase
       .from('paciente')
       .select('*')
+      .order('nome', { ascending: true })
       .range(pageIndex * 10, pageIndex * 10 + 9);
 
     if (filters.patientId) {
@@ -86,7 +87,8 @@ export const PatientProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     let query = supabase
       .from('paciente')
-      .select('*');
+      .select('*')
+      .order('nome', { ascending: true });
 
     if (filters.patientId) {
       query = query.eq('paciente_id', filters.patientId);

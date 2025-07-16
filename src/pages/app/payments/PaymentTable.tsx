@@ -18,13 +18,29 @@ export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
     const monthDate = new Date(year, month - 1);
     const monthName = new Intl.DateTimeFormat('pt-BR', { month: 'long' }).format(monthDate);
 
+
+
     const generatePDF = () => {
         const doc = new jsPDF();
 
         doc.setFontSize(12);
         doc.text(`Relatório de Pagamentos\nMês: ${monthName.charAt(0).toUpperCase() + monthName.slice(1)}`, 14, 10);
 
-        const tableData = paymentDataNotPaginated.map((payment) => ([
+        // Ordenar também os dados não paginados para o PDF
+        const sortedPaymentDataNotPaginated = [...paymentDataNotPaginated].sort((a, b) => {
+            const valorA = parseFloat(a.valor_pago?.toString() || '0');
+            const valorB = parseFloat(b.valor_pago?.toString() || '0');
+            
+            if (valorA !== valorB) {
+                return valorB - valorA;
+            }
+            
+            const nomeA = a.nome || '';
+            const nomeB = b.nome || '';
+            return nomeA.localeCompare(nomeB, 'pt-BR');
+        });
+
+        const tableData = sortedPaymentDataNotPaginated.map((payment) => ([
             payment.nome,
             payment.telefone,
             payment.cargo,

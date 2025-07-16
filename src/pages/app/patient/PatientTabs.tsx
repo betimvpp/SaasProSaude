@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Patient } from '@/contexts/patientContext';
 import { PatientDetails } from './PatientDetails';
 import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
-import { PatientSchales } from './PatientSchales';
+import { PatientScales } from './PatientScales';
 
 export interface PatientDetailsProps {
     patient: Patient;
@@ -26,7 +26,7 @@ export const PatientTabs = ({ patient }: PatientDetailsProps) => {
                 </TabsContent>
 
                 <TabsContent value="schedules" className="w-full h-full">
-                    <PatientSchales patient={patient} isAdmin={collaboratorData?.role!} isLoading={isLoading} />
+                    <PatientScales patient={patient} isAdmin={collaboratorData?.role!} isLoading={isLoading} />
                 </TabsContent>
             </Tabs>
 
