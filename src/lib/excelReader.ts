@@ -1,5 +1,5 @@
 import * as XLSX from "xlsx";
-import { PacienteData, TecnicoData, DiaValor, EscalaData, ExcelReaderResult } from "./types.ts";
+import { PacienteData, TecnicoData, DiaValor, EscalaData, ExcelReaderResult } from "./types";
 import supabase from "./supabase";
 
 const ignorePatterns = [
@@ -25,7 +25,9 @@ function isLinhaIgnorada(texto: string): boolean {
 
 function getServiceTime(tipoServico: string): string {
   switch (tipoServico.toUpperCase()) {
-    case 'N':
+    case 'SD':
+      return '7:00 às 19:00';
+    case 'SN':
       return '19:00 às 7:00';
     case 'P':
       return '7:00 às 7:00';
@@ -47,9 +49,9 @@ function getPagamentoAR_AV(tipoServico: string): string {
     case 'P':
       return 'AR';
     case 'M':
-      return 'AV';
+      return 'AR';
     case 'T':
-      return 'AV';
+      return 'AR';
     case 'GR':
       return 'AR'; // GR geralmente é AR (A Receber)
     default:
@@ -101,7 +103,9 @@ function normalizarNome(nome: string): string {
 // Função para buscar paciente por correspondência parcial de nome
 async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_id: string; nome: string } | null> {
   try {
-    // Primeiro, tentar busca exata
+    console.log("🔍 Buscando paciente por nome:", nomePaciente);
+    
+    // Primeiro, tentar busca exata - APENAS LEITURA
     const { data: pacienteExato, error: errorExato } = await supabase
       .from("paciente")
       .select("paciente_id, nome")
@@ -109,18 +113,21 @@ async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_i
       .single();
 
     if (pacienteExato && !errorExato) {
+      console.log("✅ Paciente encontrado (busca exata):", pacienteExato);
       return pacienteExato;
     }
 
-    // Se não encontrar, buscar por correspondência parcial
+    // Se não encontrar, buscar por correspondência parcial - APENAS LEITURA
     const nomeNormalizado = normalizarNome(nomePaciente);
+    console.log("🔍 Buscando por correspondência parcial:", nomeNormalizado);
     
-    // Buscar todos os pacientes
+    // Buscar todos os pacientes - APENAS LEITURA
     const { data: todosPacientes, error: errorTodos } = await supabase
       .from("paciente")
       .select("paciente_id, nome");
 
     if (errorTodos || !todosPacientes) {
+      console.error("❌ Erro ao buscar todos os pacientes:", errorTodos);
       return null;
     }
 
@@ -130,13 +137,15 @@ async function buscarPacientePorNome(nomePaciente: string): Promise<{ paciente_i
       
       // Verificar se o nome do Excel está contido no nome do banco
       if (nomeBancoNormalizado.includes(nomeNormalizado) || nomeNormalizado.includes(nomeBancoNormalizado)) {
+        console.log("✅ Paciente encontrado (correspondência parcial):", paciente);
         return paciente;
       }
     }
 
+    console.log("❌ Paciente não encontrado:", nomePaciente);
     return null;
   } catch (error) {
-    console.error("Erro ao buscar paciente:", error);
+    console.error("❌ Erro ao buscar paciente:", error);
     return null;
   }
 }
@@ -292,18 +301,49 @@ export async function processarEscalasDoExcel(
         
         // Se não há GR ou apenas um GR, criar uma escala normal
         if (quantidadeGR <= 1) {
-          const escala: EscalaData = {
-            paciente_id: paciente.paciente_id,
-            funcionario_id: funcionario.funcionario_id,
-            nome_colaborador: funcionario.nome,
-            data: data,
-            tipo_servico: tipoServico,
-            valor_recebido: 0, // Será definido pelo usuário
-            valor_pago: 0, 
-            pagamentoAR_AV: getPagamentoAR_AV(tipoServico),
-            horario_gerenciamento: getServiceTime(tipoServico)
-          };
-          escalas.push(escala);
+          // Verificar se é tipo "MT" para duplicar em "M" e "T"
+          if (tipoServico.toUpperCase() === 'MT') {
+            // Criar escala com tipo "M"
+            const escalaM: EscalaData = {
+              paciente_id: paciente.paciente_id,
+              funcionario_id: funcionario.funcionario_id,
+              nome_colaborador: funcionario.nome,
+              data: data,
+              tipo_servico: 'M',
+              valor_recebido: 0, // Será definido pelo usuário
+              valor_pago: 0, 
+              pagamentoAR_AV: getPagamentoAR_AV('M'),
+              horario_gerenciamento: getServiceTime('M')
+            };
+            escalas.push(escalaM);
+
+            // Criar escala com tipo "T"
+            const escalaT: EscalaData = {
+              paciente_id: paciente.paciente_id,
+              funcionario_id: funcionario.funcionario_id,
+              nome_colaborador: funcionario.nome,
+              data: data,
+              tipo_servico: 'T',
+              valor_recebido: 0, // Será definido pelo usuário
+              valor_pago: 0, 
+              pagamentoAR_AV: getPagamentoAR_AV('T'),
+              horario_gerenciamento: getServiceTime('T')
+            };
+            escalas.push(escalaT);
+          } else {
+            const escala: EscalaData = {
+              paciente_id: paciente.paciente_id,
+              funcionario_id: funcionario.funcionario_id,
+              nome_colaborador: funcionario.nome,
+              data: data,
+              tipo_servico: tipoServico,
+              valor_recebido: 0, // Será definido pelo usuário
+              valor_pago: 0, 
+              pagamentoAR_AV: getPagamentoAR_AV(tipoServico),
+              horario_gerenciamento: getServiceTime(tipoServico)
+            };
+            escalas.push(escala);
+          }
         } else {
           // Se há múltiplos GR, criar múltiplas escalas GR
           for (let i = 0; i < quantidadeGR; i++) {

@@ -169,7 +169,7 @@ export const PatientSchales = ({ patient, isAdmin, isLoading, }: { patient: Pati
                 return '7:00 às 19:00';
             case 'SN':
                 return '19:00 às 7:00';
-            case 'PT':
+            case 'P':
                 return '7:00 às 7:00';
             case 'M':
                 return '7:00 às 13:00';
