@@ -87,6 +87,7 @@ const ScaleContext = createContext<{
 
     handleApprove: (scale: ServiceExchange) => Promise<void>;
     handleReject: (scale: ServiceExchange) => Promise<void>;
+    clearDailyCache: () => void;
 }>({
     scales: [],
     scalesNotPaginated: [],
@@ -106,6 +107,7 @@ const ScaleContext = createContext<{
 
     handleApprove: async () => { },
     handleReject: async () => { },
+    clearDailyCache: () => { },
 });
 
 export const useScale = () => useContext(ScaleContext);
@@ -119,6 +121,9 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
     const [scaleCountsByDate, setScaleCountsByDate] = useState<Record<string, number>>({});
     const [monthlyCache, setMonthlyCache] = useState<
         Record<string, { scales: Scale[]; counts: Record<string, number> }>
+    >({});
+    const [dailyCache, setDailyCache] = useState<
+        Record<string, { scales: Scale[]; counts: Record<string, number>; timestamp: number }>
     >({});
 
     const fetchScales = useCallback(async (filters: ScaleFiltersSchema = {}, pageIndex: number = 0) => {
@@ -169,59 +174,7 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
         setLoading(false);
     }, []);
 
-    // const fetchScalesNotPaginated = useCallback(async (filters: ScaleFiltersSchema = {}) => {
-    //     setLoading(true);
 
-    //     let query = supabase
-    //         .from('escala')
-    //         .select(`*
-    //             ,funcionario:funcionario_id (nome),
-    //             paciente:paciente_id (nome)`);
-
-    //     if (filters.pacienteId) {
-    //         query = query.eq('paciente_id', filters.pacienteId);
-    //     }
-    //     if (filters.funcionarioId) {
-    //         query = query.eq('funcionario_id', filters.funcionarioId);
-    //     }
-    //     if (filters.data) {
-    //         query = query.eq('data', filters.data);
-    //     }
-    //     if (filters.tipoServico) {
-    //         query = query.ilike('tipo_servico', `%${filters.tipoServico}%`);
-    //     }
-
-    //     const { data: escalas, error } = await query;
-
-    //     if (error) {
-    //         console.error('Erro ao buscar dados de escalas:', error);
-    //         setLoading(false);
-    //         return;
-    //     }
-
-    //     if (escalas) {
-    //         const parsedData = escalas.map((item) => scaleSchema.safeParse({
-    //             ...item,
-    //             nomeFuncionario: item.funcionario?.nome || null,
-    //             nomePaciente: item.paciente?.nome || null,
-    //         }));
-
-    //         const validScales = parsedData
-    //             .filter((item) => item.success)
-    //             .map((item) => item.data);
-
-    //         setScalesNotPaginated(validScales);
-
-    //         const counts: Record<string, number> = {};
-    //         validScales.forEach((scale) => {
-    //             const date = scale.data;
-    //             counts[date] = (counts[date] || 0) + 1;
-    //         });
-    //         setScaleCountsByDate(counts);
-    //     }
-
-    //     setLoading(false);
-    // }, []);
     const fetchScalesNotPaginated = useCallback(
         async (filters: ScaleFiltersSchema = {}) => {
             setLoading(true);
@@ -303,6 +256,22 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
                 return;
             }
 
+            // --- caso DATA exata: verifica cache primeiro
+            if (filters.data && /^\d{4}-\d{2}-\d{2}$/.test(filters.data)) {
+                const cacheKey = filters.data;
+                const cachedData = dailyCache[cacheKey];
+                const now = Date.now();
+                const cacheExpiration = 5 * 60 * 1000; // 5 minutos
+
+                // Se existe cache válido (não expirado), usa ele
+                if (cachedData && (now - cachedData.timestamp) < cacheExpiration) {
+                    setScalesNotPaginated(cachedData.scales);
+                    setScaleCountsByDate(cachedData.counts);
+                    setLoading(false);
+                    return;
+                }
+            }
+
             // --- caso DATA exata (ou sem filtro): comportamento original
             let query = supabase
                 .from("escala")
@@ -351,9 +320,22 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
 
             setScalesNotPaginated(validScales);
             setScaleCountsByDate(counts);
+
+            // Salva no cache se for uma data específica
+            if (filters.data && /^\d{4}-\d{2}-\d{2}$/.test(filters.data)) {
+                setDailyCache((prev) => ({
+                    ...prev,
+                    [filters.data!]: { 
+                        scales: validScales, 
+                        counts, 
+                        timestamp: Date.now() 
+                    },
+                }));
+            }
+
             setLoading(false);
         },
-        [monthlyCache]
+        [monthlyCache, dailyCache]
     );
 
     const fetchServiceExchanges = useCallback(async (filters: ServiceExchangeFiltersSchema = {}, pageIndex: number = 0) => {
@@ -543,6 +525,10 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, []);
 
+    const clearDailyCache = useCallback(() => {
+        setDailyCache({});
+    }, []);
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -571,7 +557,8 @@ export const ScaleProvider = ({ children }: { children: ReactNode }) => {
             serviceExchangesNotPaginated,
 
             handleApprove,
-            handleReject
+            handleReject,
+            clearDailyCache
         }}>
             {children}
         </ScaleContext.Provider>

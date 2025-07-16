@@ -37,7 +37,7 @@ export const ScaleCalendar = () => {
 
     const handleCloseDialog = () => {
         setSelectedDate(null);
-        fetchScalesNotPaginated();
+        fetchScalesNotPaginated({ data: currentDate.format("YYYY-MM") });
     };
 
     useEffect(() => {
