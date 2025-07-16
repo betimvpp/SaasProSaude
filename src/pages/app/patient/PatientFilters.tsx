@@ -9,7 +9,11 @@ import { PatientAdditioner } from './PatientAdditioner';
 import { useState } from 'react';
 import { PatientSpecialtyAdditioner } from './PatientSpecialtyAdditioner';
 
-export function PatientFilters() {
+interface PatientFiltersProps {
+  onFiltersChange: (filters: PatientFiltersSchema) => void;
+}
+
+export function PatientFilters({ onFiltersChange }: PatientFiltersProps) {
   const { fetchPatients } = usePatients();
   const [isAdditionerOpen, setIsAdditionerOpen] = useState(false);
   const [isSpecialtyAdditionerOpen, setIsSpecialtyAdditionerOpen] = useState(false);
@@ -24,6 +28,7 @@ export function PatientFilters() {
 
   async function handleFilter(data: PatientFiltersSchema) {
     await fetchPatients(data);
+    onFiltersChange(data);
   }
 
   function handleClearFilters() {
@@ -32,7 +37,9 @@ export function PatientFilters() {
       patientName: '',
     });
 
-    fetchPatients({ patientId: '', patientName: '' });
+    const emptyFilters = { patientId: '', patientName: '' };
+    fetchPatients(emptyFilters);
+    onFiltersChange(emptyFilters);
   }
 
   return (

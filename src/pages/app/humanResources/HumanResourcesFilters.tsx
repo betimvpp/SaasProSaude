@@ -9,7 +9,11 @@ import { Dialog, DialogTrigger } from '@/components/ui/dialog'
 import { HumanResourceAdditioner } from './HumanResourceAdditioner'
 import { useState } from 'react'
 
-export function HumanResourcesFilters() {
+interface HumanResourcesFiltersProps {
+  onFiltersChange: (filters: HumanResourcesFiltersSchema) => void;
+}
+
+export function HumanResourcesFilters({ onFiltersChange }: HumanResourcesFiltersProps) {
   const { fetchHumanResources } = useHumanResources();
   const [isAdditionerOpen, setIsAdditionerOpen] = useState(false);
 
@@ -23,6 +27,7 @@ export function HumanResourcesFilters() {
 
   async function handleFilter(data: HumanResourcesFiltersSchema) {
     await fetchHumanResources(data);
+    onFiltersChange(data);
   }
 
   function handleClearFilters() {
@@ -31,7 +36,9 @@ export function HumanResourcesFilters() {
       humanResourcesName: '',
     });
 
-    fetchHumanResources({ humanResourcesId: '', humanResourcesName: '' });
+    const emptyFilters = { humanResourcesId: '', humanResourcesName: '' };
+    fetchHumanResources(emptyFilters);
+    onFiltersChange(emptyFilters);
   }
   return (
     <div className='flex justify-between'>

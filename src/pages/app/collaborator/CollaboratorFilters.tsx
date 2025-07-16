@@ -10,9 +10,11 @@ import { CollaboratorAdditioner } from './CollaboratorAdditioner'
 import { useState } from 'react'
 import { CityAdditioner } from './CityAdditioner'
 
+interface CollaboratorFiltersProps {
+  onFiltersChange?: (filters: CollaboratorFiltersSchema) => void;
+}
 
-
-export function CollaboratorFilters() {
+export function CollaboratorFilters({ onFiltersChange }: CollaboratorFiltersProps) {
   const { fetchCollaborator } = useCollaborator();
   const [isAdditionerOpen, setIsAdditionerOpen] = useState(false);
   const [isCityAdditionerOpen, setIsCityAdditionerOpen] = useState(false);
@@ -27,6 +29,7 @@ export function CollaboratorFilters() {
 
   async function handleFilter(data: CollaboratorFiltersSchema) {
     await fetchCollaborator(data);
+    onFiltersChange?.(data);
   }
 
   function handleClearFilters() {
@@ -35,7 +38,9 @@ export function CollaboratorFilters() {
       role: 'all',
     });
 
-    fetchCollaborator({ collaboratorName: '', role: 'all' });
+    const clearedFilters = { collaboratorName: '', role: 'all' };
+    fetchCollaborator(clearedFilters);
+    onFiltersChange?.(clearedFilters);
   }
 
 
