@@ -5,8 +5,7 @@ import dayjs from "dayjs";
 import { ScaleCalendarDetailsRow } from "./ScaleCalendarDetailsRow";
 import { useEffect, useState } from "react";
 import { Pagination } from "@/components/pagination";
-import { useCollaborator } from "@/contexts/collaboratorContext";
-import { useAuth } from "@/contexts/authContext";
+import { useCollaboratorCache } from "@/lib/useCollaboratorCache";
 
 interface ScaleCalendarDetailsProps {
     date: dayjs.Dayjs;
@@ -22,18 +21,8 @@ export const ScaleCalendarDetails = ({ date, loading }: ScaleCalendarDetailsProp
     const totalCount = selectedDateScales?.length || 0;
     const paginatedScales = selectedDateScales.slice(pageIndex * perPage, (pageIndex + 1) * perPage);
 
-    const [isAdmin, setIsAdmin] = useState(false);
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-
-
-    useEffect(() => {
-        if (user) {
-            getCollaboratorById(user.id).then(data => {
-                setIsAdmin(data?.role === 'admin');
-            });
-        }
-    }, [user, getCollaboratorById]);
+    const { collaboratorData } = useCollaboratorCache();
+    const isAdmin = collaboratorData?.role === 'admin';
 
     useEffect(() => {
         fetchScales({}, pageIndex);

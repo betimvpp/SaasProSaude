@@ -1,30 +1,17 @@
-import { useAuth } from '@/contexts/authContext';
-import { useCollaborator, Collaborator } from '@/contexts/collaboratorContext';
 import { CircleUserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Skeleton } from './ui/skeleton';
 import { Dialog, DialogTrigger } from './ui/dialog';
 import { ProfileDetails } from './profileDetails';
+import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
 
 function capitalizeFirstLetter(string: string) {
     return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
 
 export function Profile() {
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { collaboratorData, isLoading } = useCollaboratorCache();
     const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-
-    useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
-    }, [user, getCollaboratorById]);
 
     return (
         <span className='flex flex-col items-center justify-center'>

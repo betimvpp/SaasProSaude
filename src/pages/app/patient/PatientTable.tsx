@@ -1,26 +1,12 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { PatientRow } from "./PatientRow"
 import { usePatients } from "@/contexts/patientContext";
-import { useAuth } from "@/contexts/authContext";
-import { Collaborator, useCollaborator } from "@/contexts/collaboratorContext";
-import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCollaboratorCache } from "@/lib/useCollaboratorCache";
 
 export const PatientTable = () => {
     const { patients } = usePatients();
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
-    }, [user, getCollaboratorById]);
+    const { collaboratorData, isLoading } = useCollaboratorCache();
 
     return (
         <Table>

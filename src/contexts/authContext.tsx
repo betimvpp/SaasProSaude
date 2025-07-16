@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useState, useEffect } from "react
 import { toast } from "sonner";
 import supabase from "@/lib/supabase";
 import { z } from "zod";
+import { getCollaboratorCache } from "@/lib/useCollaboratorCache";
 
 const signInForm = z.object({
     email: z.string().email(),
@@ -45,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         supabase.auth.signOut();
         setIsAuthenticated(false);
         setUser(null);
+        // Limpa o cache de colaboradores
+        getCollaboratorCache().clear();
         toast.info("Logout realizado com sucesso!");
     }
 

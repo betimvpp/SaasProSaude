@@ -1,31 +1,22 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { CreateMultiScheduleTable } from './CreateMultiScheduleTable'
 import { CreateSingleScheduleTable } from './CreateSingleScheduleTable'
-import { useAuth } from '@/contexts/authContext';
-import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
+import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
 import { useEffect, useState } from 'react';
 import { CreateAvulseScheduleTable } from './CreateAvulseScheduleTable';
 import { CreateImportedScheduleTable } from './CreateImportedSchedule/CreateImportedScheduleTable';
 export const CreateScheduleTabs = () => {
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
+    const { collaboratorData } = useCollaboratorCache();
     // Adicionando verificação de URL
     const [isImportedTabAvailable, setIsImportedTabAvailable] = useState(false);
 
     useEffect(() => {
-        if (user) {
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally();
-        }
-
         if (window?.location?.pathname === `/escala/criar-importada`) {
             setIsImportedTabAvailable(true);
         } else {
             setIsImportedTabAvailable(false);
         }
-    }, [user, getCollaboratorById]);
+    }, []);
 
     return (
         <Tabs defaultValue="simple" className="flex flex-col items-center justify-center w-full h-full">

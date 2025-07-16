@@ -1,31 +1,17 @@
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { usePayment } from '@/contexts/paymentContext';
 import { PaymentRow } from './PaymentRow';
-import { useAuth } from '@/contexts/authContext';
-import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
-import { useEffect, useState } from 'react';
 import { TableSkeleton } from '@/components/table-skeleton';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
 
 interface PaymentTableProps {
     selectedMonth: string;
 }
 export const PaymentTable = ({ selectedMonth }: PaymentTableProps) => {
     const { paymentData, paymentDataNotPaginated, loading } = usePayment();
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
-    }, [user, getCollaboratorById]);
+    const { collaboratorData, isLoading } = useCollaboratorCache();
 
     const currentMonth = selectedMonth || new Date().toISOString().slice(0, 7);
     const [year, month] = currentMonth.split('-').map(Number);

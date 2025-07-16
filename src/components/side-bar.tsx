@@ -14,20 +14,12 @@ import { Separator } from './ui/separator'
 import { useAuth } from '@/contexts/authContext'
 import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Collaborator, useCollaborator } from '@/contexts/collaboratorContext';
-import { useEffect, useState } from 'react';
+import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
 
 export function SideBar() {
-    const { logout, user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
+    const { logout } = useAuth();
+    const { collaboratorData } = useCollaboratorCache();
     const navigate = useNavigate();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-
-    useEffect(() => {
-        if (user) {
-            getCollaboratorById(user.id).then(data => setCollaboratorData(data));
-        }
-    }, [user, getCollaboratorById]);
 
     function handleLogout() {
         logout();

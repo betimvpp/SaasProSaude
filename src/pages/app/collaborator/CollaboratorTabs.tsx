@@ -1,10 +1,8 @@
 import { DialogContent } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
+import { Collaborator } from '@/contexts/collaboratorContext';
 import { CollaboratorDetails } from './CollaboratorDetails';
-import { useAuth } from '@/contexts/authContext';
-import { useCollaborator, Collaborator } from '@/contexts/collaboratorContext';
-import { useState, useEffect } from 'react';
+import { useCollaboratorCache } from '@/lib/useCollaboratorCache';
 import { CollaboratorSchales } from './CollaboratorScales';
 
 
@@ -14,19 +12,7 @@ export interface CollaboratorDetailsProps {
 }
 
 export const CollaboratorTabs = ({ collaborator }: CollaboratorDetailsProps) => {
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
-    }, [user, getCollaboratorById]);
+    const { collaboratorData, isLoading } = useCollaboratorCache();
 
     return (
         <DialogContent className="min-w-[90vw] h-[90vh] overflow-y-scroll">

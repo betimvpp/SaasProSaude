@@ -3,10 +3,9 @@ import { DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/compon
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
-import { useAuth } from "@/contexts/authContext";
-import { Collaborator, useCollaborator } from "@/contexts/collaboratorContext";
 import { useHabilities } from "@/contexts/habilitiesContext";
 import { Patient, usePatients } from "@/contexts/patientContext";
+import { useCollaboratorCache } from "@/lib/useCollaboratorCache";
 import supabase from "@/lib/supabase";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -22,10 +21,7 @@ export const PatientAdditioner = () => {
         mode: "onSubmit",
     });
     const { addPatient } = usePatients();
-    const { user } = useAuth();
-    const { getCollaboratorById } = useCollaborator();
-    const [collaboratorData, setCollaboratorData] = useState<Collaborator | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { collaboratorData, isLoading } = useCollaboratorCache();
     const [cities, setCities] = useState<string[]>([]);
 
     const fetchCities = async () => {
@@ -80,14 +76,8 @@ export const PatientAdditioner = () => {
     };
 
     useEffect(() => {
-        if (user) {
-            setIsLoading(true);
-            getCollaboratorById(user.id)
-                .then(data => setCollaboratorData(data))
-                .finally(() => setIsLoading(false));
-        }
         fetchCities();
-    }, [user, getCollaboratorById]);
+    }, []);
 
     return (
         <DialogContent className="min-w-[90vw] overflow-y-scroll">
